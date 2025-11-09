@@ -1,0 +1,248 @@
+import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom/ReactiveElement';
+
+const cursor = (color: string, scale = 1) => `<svg width="${scale * 11}" height="${
+  scale * 17
+}" viewBox="0 0 11 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="path-1-outside-1_3001_67" maskUnits="userSpaceOnUse" x="-0.25" y="-0.249977" width="11" height="17" fill="black">
+<rect fill="white" x="-0.25" y="-0.249977" width="11" height="17"/>
+<path d="M9.39551 9.41409H5.48438L7.89844 15.1514L5.94531 15.9707L3.43555 10.002L0.75 12.5957V0.750023L9.39551 9.41409Z"/>
+</mask>
+<path d="M9.39551 9.41409H5.48438L7.89844 15.1514L5.94531 15.9707L3.43555 10.002L0.75 12.5957V0.750023L9.39551 9.41409Z" fill="${color}"/>
+<path d="M9.39551 9.41409V10.1641C9.69871 10.1641 9.97208 9.98153 10.0883 9.70147C10.2044 9.42141 10.1406 9.09895 9.92641 8.88432L9.39551 9.41409ZM5.48438 9.41409V8.66409C5.23315 8.66409 4.9986 8.78987 4.85961 8.99915C4.72062 9.20843 4.69564 9.4734 4.79308 9.70496L5.48438 9.41409ZM7.89844 15.1514L8.18857 15.843C8.37212 15.766 8.51754 15.6192 8.59279 15.4349C8.66803 15.2506 8.66693 15.044 8.58973 14.8605L7.89844 15.1514ZM5.94531 15.9707L5.25395 16.2614C5.4144 16.643 5.8537 16.8225 6.23544 16.6623L5.94531 15.9707ZM3.43555 10.002L4.12691 9.71127C4.03099 9.48314 3.82871 9.31702 3.58629 9.26728C3.34387 9.21754 3.09252 9.29059 2.91452 9.46251L3.43555 10.002ZM0.75 12.5957H0C0 12.8967 0.179922 13.1685 0.456975 13.2861C0.734028 13.4037 1.05454 13.3443 1.27103 13.1352L0.75 12.5957ZM0.75 0.750023L1.2809 0.220262C1.06653 0.0054297 0.743812 -0.0590319 0.463359 0.0569595C0.182906 0.172951 0 0.44653 0 0.750023H0.75ZM9.39551 9.41409V8.66409H5.48438V9.41409V10.1641H9.39551V9.41409ZM5.48438 9.41409L4.79308 9.70496L7.20714 15.4423L7.89844 15.1514L8.58973 14.8605L6.17567 9.12321L5.48438 9.41409ZM7.89844 15.1514L7.60831 14.4598L5.65518 15.2791L5.94531 15.9707L6.23544 16.6623L8.18857 15.843L7.89844 15.1514ZM5.94531 15.9707L6.63668 15.68L4.12691 9.71127L3.43555 10.002L2.74418 10.2927L5.25395 16.2614L5.94531 15.9707ZM3.43555 10.002L2.91452 9.46251L0.22897 12.0563L0.75 12.5957L1.27103 13.1352L3.95658 10.5414L3.43555 10.002ZM0.75 12.5957H1.5V0.750023H0.75H0V12.5957H0.75ZM0.75 0.750023L0.219102 1.27978L8.86461 9.94385L9.39551 9.41409L9.92641 8.88432L1.2809 0.220262L0.75 0.750023Z" fill="white" mask="url(#path-1-outside-1_3001_67)"/>
+</svg>`;
+
+const sittingCursor = (color: string, scale = 1) => `<svg width="${scale * 11}" height="${
+  scale * 19
+}" viewBox="0 0 11 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <mask id="path-1-outside-1_3001_65" maskUnits="userSpaceOnUse" x="-1.91405" y="-0.526566" width="16.3802" height="20.6403" fill="black">
+  <rect fill="white" x="-1.91405" y="-0.526566" width="16.3802" height="20.6403"/>
+  <path d="M9.96172 11.8041L6.27518 10.4978L6.36066 11.9817L7.73574 13.133L7.73712 17.629L5.62342 17.7493L5.62334 13.2496L4.24671 12.0822L4.14766 10.3676L0.750029 11.9155L4.70643 0.750004L9.96172 11.8041Z"/>
+  </mask>
+  <path d="M9.96172 11.8041L6.27518 10.4978L6.36066 11.9817L7.73574 13.133L7.73712 17.629L5.62342 17.7493L5.62334 13.2496L4.24671 12.0822L4.14766 10.3676L0.750029 11.9155L4.70643 0.750004L9.96172 11.8041Z" fill="${color}"
+  />
+  <path d="M9.96172 11.8041L9.71122 12.511C9.99701 12.6123 10.3157 12.5315 10.5187 12.3063C10.7218 12.0812 10.7693 11.7559 10.6391 11.4821L9.96172 11.8041ZM6.27518 10.4978L6.52568 9.79086C6.2889 9.70696 6.02585 9.74717 5.82495 9.89797C5.62404 10.0488 5.51198 10.2901 5.52642 10.5409L6.27518 10.4978ZM6.36066 11.9817L5.6119 12.0248C5.6238 12.2314 5.72052 12.4239 5.87917 12.5567L6.36066 11.9817ZM7.73574 13.133L8.48574 13.1328C8.48567 12.9109 8.38735 12.7004 8.21722 12.558L7.73574 13.133ZM7.73712 17.629L7.77973 18.3778C8.17684 18.3552 8.48724 18.0265 8.48712 17.6287L7.73712 17.629ZM5.62342 17.7493L4.87342 17.7493C4.87343 17.9556 4.95841 18.1528 5.10838 18.2944C5.25835 18.4361 5.46006 18.5098 5.66603 18.498L5.62342 17.7493ZM5.62334 13.2496L6.37334 13.2496C6.37334 13.0293 6.27646 12.8201 6.10843 12.6776L5.62334 13.2496ZM4.24671 12.0822L3.49796 12.1254C3.5098 12.3303 3.60509 12.5214 3.76162 12.6542L4.24671 12.0822ZM4.14766 10.3676L4.89641 10.3244C4.88214 10.0773 4.74694 9.85324 4.53506 9.72543C4.32319 9.59761 4.0619 9.58253 3.83673 9.68511L4.14766 10.3676ZM0.750029 11.9155L0.0430978 11.665C-0.0574262 11.9487 0.0213764 12.265 0.243245 12.4683C0.465113 12.6717 0.787066 12.7228 1.06096 12.598L0.750029 11.9155ZM4.70643 0.750004L5.38378 0.427981C5.25347 0.153887 4.97082 -0.0146577 4.66773 0.001003C4.36464 0.0166637 4.10087 0.213443 3.9995 0.499508L4.70643 0.750004ZM9.96172 11.8041L10.2122 11.0972L6.52568 9.79086L6.27518 10.4978L6.02469 11.2047L9.71122 12.511L9.96172 11.8041ZM6.27518 10.4978L5.52642 10.5409L5.6119 12.0248L6.36066 11.9817L7.10942 11.9385L7.02394 10.4547L6.27518 10.4978ZM6.36066 11.9817L5.87917 12.5567L7.25425 13.7081L7.73574 13.133L8.21722 12.558L6.84214 11.4066L6.36066 11.9817ZM7.73574 13.133L6.98574 13.1333L6.98712 17.6292L7.73712 17.629L8.48712 17.6287L8.48574 13.1328L7.73574 13.133ZM7.73712 17.629L7.69451 16.8802L5.58081 17.0005L5.62342 17.7493L5.66603 18.498L7.77973 18.3778L7.73712 17.629ZM5.62342 17.7493L6.37342 17.7492L6.37334 13.2496L5.62334 13.2496L4.87334 13.2496L4.87342 17.7493L5.62342 17.7493ZM5.62334 13.2496L6.10843 12.6776L4.7318 11.5102L4.24671 12.0822L3.76162 12.6542L5.13825 13.8216L5.62334 13.2496ZM4.24671 12.0822L4.99546 12.0389L4.89641 10.3244L4.14766 10.3676L3.39891 10.4109L3.49796 12.1254L4.24671 12.0822ZM4.14766 10.3676L3.83673 9.68511L0.439099 11.233L0.750029 11.9155L1.06096 12.598L4.45859 11.0501L4.14766 10.3676ZM0.750029 11.9155L1.45696 12.166L5.41336 1.0005L4.70643 0.750004L3.9995 0.499508L0.0430978 11.665L0.750029 11.9155ZM4.70643 0.750004L4.02908 1.07203L9.28437 12.1261L9.96172 11.8041L10.6391 11.4821L5.38378 0.427981L4.70643 0.750004Z" fill="white" mask="url(#path-1-outside-1_3001_65)"/>
+</svg>`;
+
+const sittingCursorWithLegsBack = (color: string, scale = 1) => `<svg width="${scale * 11}" height="${
+  scale * 18
+}" viewBox="0 0 11 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <mask id="path-1-outside-1_3063_8" maskUnits="userSpaceOnUse" x="-1.91406" y="-0.526566" width="16.3802" height="20.6403" fill="black">
+  <rect fill="white" x="-1.91406" y="-0.526566" width="16.3802" height="20.6403"/>
+  <path d="M9.96172 11.8041L6.27518 10.4978L6.36066 11.9817L7.73573 13.133L6.73672 17.0517L4.62302 17.172L5.62334 13.2496L4.24671 12.0822L4.14766 10.3676L0.750028 11.9155L4.70643 0.750004L9.96172 11.8041Z"/>
+  </mask>
+  <path d="M9.96172 11.8041L6.27518 10.4978L6.36066 11.9817L7.73573 13.133L6.73672 17.0517L4.62302 17.172L5.62334 13.2496L4.24671 12.0822L4.14766 10.3676L0.750028 11.9155L4.70643 0.750004L9.96172 11.8041Z" fill="${color}"/>
+  <path d="M9.96172 11.8041L9.71122 12.511C9.99701 12.6123 10.3157 12.5315 10.5187 12.3063C10.7218 12.0812 10.7693 11.7559 10.6391 11.4821L9.96172 11.8041ZM6.27518 10.4978L6.52568 9.79086C6.2889 9.70696 6.02585 9.74717 5.82494 9.89797C5.62404 10.0488 5.51198 10.2901 5.52642 10.5409L6.27518 10.4978ZM6.36066 11.9817L5.6119 12.0248C5.6238 12.2314 5.72052 12.4239 5.87917 12.5567L6.36066 11.9817ZM7.73573 13.133L8.46249 13.3183C8.53375 13.0388 8.43839 12.7432 8.21722 12.558L7.73573 13.133ZM6.73672 17.0517L6.77933 17.8005C7.10585 17.7819 7.38269 17.5539 7.46348 17.237L6.73672 17.0517ZM4.62302 17.172L3.89629 16.9867C3.83721 17.2183 3.89211 17.4643 4.0441 17.6488C4.19609 17.8334 4.42695 17.9344 4.66563 17.9208L4.62302 17.172ZM5.62334 13.2496L6.35008 13.435C6.42095 13.1571 6.32715 12.8631 6.10843 12.6776L5.62334 13.2496ZM4.24671 12.0822L3.49796 12.1254C3.5098 12.3303 3.60509 12.5214 3.76162 12.6542L4.24671 12.0822ZM4.14766 10.3676L4.89641 10.3244C4.88214 10.0773 4.74694 9.85324 4.53506 9.72543C4.32319 9.59761 4.0619 9.58253 3.83673 9.68511L4.14766 10.3676ZM0.750028 11.9155L0.0430969 11.665C-0.0574272 11.9487 0.0213754 12.265 0.243244 12.4683C0.465112 12.6717 0.787066 12.7228 1.06096 12.598L0.750028 11.9155ZM4.70643 0.750004L5.38378 0.427981C5.25347 0.153887 4.97082 -0.0146577 4.66773 0.001003C4.36464 0.0166637 4.10087 0.213443 3.9995 0.499508L4.70643 0.750004ZM9.96172 11.8041L10.2122 11.0972L6.52568 9.79086L6.27518 10.4978L6.02469 11.2047L9.71122 12.511L9.96172 11.8041ZM6.27518 10.4978L5.52642 10.5409L5.6119 12.0248L6.36066 11.9817L7.10941 11.9385L7.02394 10.4547L6.27518 10.4978ZM6.36066 11.9817L5.87917 12.5567L7.25425 13.7081L7.73573 13.133L8.21722 12.558L6.84214 11.4066L6.36066 11.9817ZM7.73573 13.133L7.00898 12.9478L6.00997 16.8665L6.73672 17.0517L7.46348 17.237L8.46249 13.3183L7.73573 13.133ZM6.73672 17.0517L6.69412 16.303L4.58042 16.4232L4.62302 17.172L4.66563 17.9208L6.77933 17.8005L6.73672 17.0517ZM4.62302 17.172L5.34976 17.3574L6.35008 13.435L5.62334 13.2496L4.8966 13.0643L3.89629 16.9867L4.62302 17.172ZM5.62334 13.2496L6.10843 12.6776L4.7318 11.5102L4.24671 12.0822L3.76162 12.6542L5.13825 13.8216L5.62334 13.2496ZM4.24671 12.0822L4.99546 12.0389L4.89641 10.3244L4.14766 10.3676L3.3989 10.4109L3.49796 12.1254L4.24671 12.0822ZM4.14766 10.3676L3.83673 9.68511L0.439099 11.233L0.750028 11.9155L1.06096 12.598L4.45859 11.0501L4.14766 10.3676ZM0.750028 11.9155L1.45696 12.166L5.41336 1.0005L4.70643 0.750004L3.9995 0.499508L0.0430969 11.665L0.750028 11.9155ZM4.70643 0.750004L4.02908 1.07203L9.28437 12.1261L9.96172 11.8041L10.6391 11.4821L5.38378 0.427981L4.70643 0.750004Z" fill="white" mask="url(#path-1-outside-1_3063_8)"/>
+</svg>`;
+
+const sittingCursorWithLegsForward = (color: string, scale = 1) => `<svg width="${scale * 11}" height="${
+  scale * 19
+}" viewBox="0 0 11 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <mask id="path-1-outside-1_3063_18" maskUnits="userSpaceOnUse" x="-1.58006" y="-0.526566" width="16.9888" height="20.0317" fill="black">
+  <rect fill="white" x="-1.58006" y="-0.526566" width="16.9888" height="20.0317"/>
+  <path d="M9.96172 11.8041L6.27518 10.4978L6.36065 11.9817L7.73573 13.133L9.12304 17.2498L7.00934 17.3701L5.62334 13.2496L4.24671 12.0822L4.14765 10.3676L0.750025 11.9155L4.70643 0.750004L9.96172 11.8041Z"/>
+  </mask>
+  <path d="M9.96172 11.8041L6.27518 10.4978L6.36065 11.9817L7.73573 13.133L9.12304 17.2498L7.00934 17.3701L5.62334 13.2496L4.24671 12.0822L4.14765 10.3676L0.750025 11.9155L4.70643 0.750004L9.96172 11.8041Z" fill="${color}"/>
+  <path d="M9.96172 11.8041L9.71122 12.511C9.99701 12.6123 10.3157 12.5315 10.5187 12.3063C10.7218 12.0812 10.7692 11.7559 10.6391 11.4821L9.96172 11.8041ZM6.27518 10.4978L6.52568 9.79086C6.2889 9.70696 6.02584 9.74717 5.82494 9.89797C5.62404 10.0488 5.51198 10.2901 5.52642 10.5409L6.27518 10.4978ZM6.36065 11.9817L5.61189 12.0248C5.62379 12.2314 5.72051 12.4239 5.87917 12.5567L6.36065 11.9817ZM7.73573 13.133L8.44646 12.8935C8.40238 12.7627 8.32305 12.6466 8.21722 12.558L7.73573 13.133ZM9.12304 17.2498L9.16565 17.9986C9.39928 17.9853 9.61332 17.8637 9.74438 17.6698C9.87544 17.476 9.9085 17.232 9.83377 17.0103L9.12304 17.2498ZM7.00934 17.3701L6.29848 17.6092C6.40619 17.9294 6.71467 18.138 7.05195 18.1188L7.00934 17.3701ZM5.62334 13.2496L6.3342 13.0105C6.29065 12.8811 6.21259 12.766 6.10843 12.6776L5.62334 13.2496ZM4.24671 12.0822L3.49796 12.1254C3.50979 12.3303 3.60508 12.5214 3.76162 12.6542L4.24671 12.0822ZM4.14765 10.3676L4.8964 10.3244C4.88213 10.0773 4.74694 9.85324 4.53506 9.72543C4.32318 9.59761 4.0619 9.58253 3.83672 9.68511L4.14765 10.3676ZM0.750025 11.9155L0.043094 11.665C-0.0574301 11.9487 0.0213725 12.265 0.243241 12.4683C0.465109 12.6717 0.787063 12.7228 1.06095 12.598L0.750025 11.9155ZM4.70643 0.750004L5.38378 0.427981C5.25347 0.153887 4.97082 -0.0146577 4.66773 0.001003C4.36464 0.0166637 4.10086 0.213443 3.9995 0.499508L4.70643 0.750004ZM9.96172 11.8041L10.2122 11.0972L6.52568 9.79086L6.27518 10.4978L6.02468 11.2047L9.71122 12.511L9.96172 11.8041ZM6.27518 10.4978L5.52642 10.5409L5.61189 12.0248L6.36065 11.9817L7.10941 11.9385L7.02394 10.4547L6.27518 10.4978ZM6.36065 11.9817L5.87917 12.5567L7.25425 13.7081L7.73573 13.133L8.21722 12.558L6.84214 11.4066L6.36065 11.9817ZM7.73573 13.133L7.025 13.3725L8.41231 17.4893L9.12304 17.2498L9.83377 17.0103L8.44646 12.8935L7.73573 13.133ZM9.12304 17.2498L9.08043 16.501L6.96673 16.6213L7.00934 17.3701L7.05195 18.1188L9.16565 17.9986L9.12304 17.2498ZM7.00934 17.3701L7.7202 17.1309L6.3342 13.0105L5.62334 13.2496L4.91247 13.4887L6.29848 17.6092L7.00934 17.3701ZM5.62334 13.2496L6.10843 12.6776L4.7318 11.5102L4.24671 12.0822L3.76162 12.6542L5.13825 13.8216L5.62334 13.2496ZM4.24671 12.0822L4.99546 12.0389L4.8964 10.3244L4.14765 10.3676L3.3989 10.4109L3.49796 12.1254L4.24671 12.0822ZM4.14765 10.3676L3.83672 9.68511L0.439096 11.233L0.750025 11.9155L1.06095 12.598L4.45858 11.0501L4.14765 10.3676ZM0.750025 11.9155L1.45696 12.166L5.41336 1.0005L4.70643 0.750004L3.9995 0.499508L0.043094 11.665L0.750025 11.9155ZM4.70643 0.750004L4.02908 1.07203L9.28437 12.1261L9.96172 11.8041L10.6391 11.4821L5.38378 0.427981L4.70643 0.750004Z" fill="white" mask="url(#path-1-outside-1_3063_18)"/>
+</svg>
+`;
+
+function clamp(min: number, value: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+const convertSVGIntoCssURL = (svg: string) => `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`;
+
+const CURSOR_COLOR = '#4f9c15';
+const CURSOR_SCALE = 1.5;
+
+export class SittingCursor extends ReactiveElement {
+  static tagName = 'sitting-cursor';
+
+  static styles = css`
+    :host {
+      display: inline-block;
+      position: absolute;
+      top: -6px;
+      left: 0;
+      width: 19.25px;
+      height: 33px;
+      pointer-events: none;
+    }
+
+    div {
+      background-size: contain;
+      background-repeat: no-repeat;
+      height: 100%;
+      width: 100%;
+    }
+  `;
+
+  @property({ type: String, reflect: true }) color = 'black';
+
+  @property({ type: Number, reflect: true }) x = 0;
+
+  @property({ type: String, reflect: true }) legs: 'forwards' | 'backwards' | '' = '';
+
+  #cursorEl = document.createElement('div');
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    root.appendChild(this.#cursorEl);
+
+    return root;
+  }
+
+  protected override async update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    if (changedProperties.has('color') || changedProperties.has('legs')) {
+      let bg;
+
+      if (this.legs === 'forwards') {
+        bg = sittingCursorWithLegsForward(this.color, CURSOR_SCALE);
+      } else if (this.legs === 'backwards') {
+        bg = sittingCursorWithLegsBack(this.color, CURSOR_SCALE);
+      } else {
+        bg = sittingCursor(this.color, CURSOR_SCALE);
+      }
+      this.#cursorEl.style.backgroundImage = convertSVGIntoCssURL(bg);
+    }
+
+    const previousX = changedProperties.get('x');
+    if (previousX !== undefined) {
+      this.style.translate = '';
+      const direction = Math.sign(this.x - previousX);
+      const animation = this.animate(
+        [
+          { translate: previousX + 'px', rotate: '0deg' },
+          { translate: previousX + 'px', rotate: direction * 10 + 'deg' },
+          { translate: this.x + 'px', rotate: direction * -5 + 'deg' },
+          { translate: this.x + 'px', rotate: '0deg' },
+        ],
+        {
+          duration: 200,
+          fill: 'forwards',
+        }
+      );
+
+      await animation.finished;
+      // console.log(animation.pending);
+      animation.commitStyles();
+
+      // // Cancel the animation because of fill mode
+      animation.cancel();
+    } else {
+      this.style.translate = this.x + 'px';
+    }
+  }
+
+  moveLeft() {
+    this.x -= 1;
+  }
+
+  moveRight() {
+    this.x += 1;
+  }
+}
+
+export class CursorBench extends ReactiveElement {
+  static tagName = 'cursor-bench';
+
+  static define() {
+    SittingCursor.define();
+    super.define();
+  }
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      pointer-events: all;
+      background-size: contain;
+      background-repeat: no-repeat;
+      /* 183 x 90 */
+      background-image: url('/bench.webp');
+      aspect-ratio: 2.03;
+      width: 60px;
+    }
+  `;
+
+  static {
+    const globalStyles = new CSSStyleSheet();
+
+    globalStyles.insertRule(`
+      body {
+        cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR, CURSOR_SCALE))}, auto;
+
+        &:has(cursor-bench:state(sitting)) {
+          cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR + '51', CURSOR_SCALE))}, auto;
+          pointer-event: none;
+        }
+      }
+    `);
+
+    document.adoptedStyleSheets.push(globalStyles);
+  }
+
+  #internals = this.attachInternals();
+  #sittingCursor: SittingCursor | null = null;
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.addEventListener('click', this.#onClick);
+
+    return root;
+  }
+
+  #onClick = (event: PointerEvent) => {
+    if (this.#sittingCursor) {
+      this.#sittingCursor.remove();
+      this.#sittingCursor = null;
+      document.removeEventListener('keydown', this.#onKeydown);
+      document.removeEventListener('keyup', this.#onKeyup);
+      this.#internals.states.delete('sitting');
+    } else {
+      this.#internals.states.add('sitting');
+
+      document.addEventListener('keydown', this.#onKeydown);
+      document.addEventListener('keyup', this.#onKeyup);
+
+      const rect = this.getBoundingClientRect();
+      this.#sittingCursor = document.createElement('sitting-cursor');
+      this.#sittingCursor.color = CURSOR_COLOR;
+      this.renderRoot.append(this.#sittingCursor);
+      this.#sittingCursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - this.#sittingCursor.offsetWidth / 2;
+    }
+  };
+
+  #onKeydown = (event: KeyboardEvent) => {
+    if (this.#sittingCursor === null) return;
+
+    if (event.code === 'ArrowLeft' && this.#sittingCursor.x > 0) {
+      this.#sittingCursor.moveLeft();
+    } else if (event.code === 'ArrowRight' && this.#sittingCursor.x + this.#sittingCursor.offsetWidth <= this.offsetWidth) {
+      this.#sittingCursor.moveRight();
+    } else if (event.code === 'ArrowUp') {
+      this.#sittingCursor.legs = 'forwards';
+    } else if (event.code === 'ArrowDown') {
+      this.#sittingCursor.legs = 'backwards';
+    }
+  };
+
+  #onKeyup = (event: KeyboardEvent) => {
+    if (this.#sittingCursor === null) return;
+
+    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+      this.#sittingCursor.legs = '';
+    }
+  };
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'cursor-bench': CursorBench;
+    'sitting-cursor': SittingCursor;
+  }
+}
