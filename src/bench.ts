@@ -116,10 +116,11 @@ export class SittingCursor extends ReactiveElement {
     :host {
       display: inline-block;
       position: absolute;
-      top: -3px;
+      top: -4px;
       left: 0;
-      width: 17.55px;
-      height: 28.35px;
+      width: 20px;
+      aspect-ratio: 13 / 21;
+      transform-origin: center 60%;
       pointer-events: none;
     }
 
@@ -154,29 +155,29 @@ export class SittingCursor extends ReactiveElement {
       let bg;
 
       if (this.legs === 'forwards') {
-        bg = sittingCursorWithLegsForward(this.color, CURSOR_SCALE);
+        bg = sittingCursorWithLegsForward(this.color);
       } else if (this.legs === 'backwards') {
-        bg = sittingCursorWithLegsBack(this.color, CURSOR_SCALE);
+        bg = sittingCursorWithLegsBack(this.color);
       } else {
-        bg = sittingCursor(this.color, CURSOR_SCALE);
+        bg = sittingCursor(this.color);
       }
       this.#cursorEl.style.backgroundImage = convertSVGIntoCssURL(bg);
     }
 
     const previousX = changedProperties.get('x');
     if (previousX !== undefined) {
-      this.style.translate = '';
+      this.style.left = '';
       this.style.rotate = '';
       const direction = Math.sign(this.x - previousX);
       const animation = this.animate(
         [
-          { translate: previousX + 'px', rotate: '0deg' },
-          { translate: previousX + 'px', rotate: direction * 10 + 'deg' },
-          { translate: this.x + 'px', rotate: direction * -5 + 'deg' },
-          { translate: this.x + 'px', rotate: '0deg' },
+          { left: previousX + 'px', rotate: '0deg' },
+          { left: previousX + 'px', rotate: direction * 10 + 'deg' },
+          { left: this.x + 'px', rotate: direction * -7 + 'deg' },
+          { left: this.x + 'px', rotate: '0deg' },
         ],
         {
-          duration: 200,
+          duration: 300,
           fill: 'forwards',
         }
       );
@@ -188,7 +189,7 @@ export class SittingCursor extends ReactiveElement {
       // // Cancel the animation because of fill mode
       animation.cancel();
     } else {
-      this.style.translate = this.x + 'px';
+      this.style.left = this.x + 'px';
     }
   }
 
