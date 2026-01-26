@@ -207,9 +207,9 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     if (this.#cursor === null) return;
     event.preventDefault();
     if (event.code === 'ArrowLeft' && this.#cursor.x > 0) {
-      this.#cursor.x -= 1;
+      this.#animateCursor(-1);
     } else if (event.code === 'ArrowRight' && this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) {
-      this.#cursor.x += 1;
+      this.#animateCursor(1);
     } else if (event.code === 'ArrowUp') {
       this.#cursor.action = 'sitting-forwards';
     } else if (event.code === 'ArrowDown') {
@@ -224,6 +224,32 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       this.#cursor.action = 'sitting';
     }
   };
+
+  async #animateCursor(delta: number) {
+    if (this.#cursor === null) return;
+
+    const previousX = this.#cursor.x;
+    const x = previousX + delta;
+    const direction = Math.sign(delta);
+    const animation = this.#cursor.animate(
+      [
+        { left: previousX + 'px', rotate: '0deg' },
+        { left: previousX + 'px', rotate: direction * 7 + 'deg' },
+        { left: x + 'px', rotate: direction * -5 + 'deg' },
+        { left: x + 'px', rotate: '0deg' },
+      ],
+      {
+        duration: 250,
+        fill: 'forwards',
+      },
+    );
+
+    // TODO: look into memory leak if someone gets off a bench when in the middle of an animation
+    await animation.finished;
+    animation.commitStyles();
+    animation.cancel();
+    this.#cursor.x = x;
+  }
 }
 
 export class CursorPark extends ReactiveElement implements CursorObject {
@@ -306,32 +332,3 @@ declare global {
 MouseCursor.define();
 CursorBench.define();
 CursorPark.define();
-
-/* SITTING ANIMATION LOGIC */
-//     const previousX = changedProperties.get('x');
-//     if (previousX !== undefined) {
-//       this.style.left = '';
-//       this.style.rotate = '';
-//       const direction = Math.sign(this.x - previousX);
-//       const animation = this.animate(
-//         [
-//           { left: previousX + 'px', rotate: '0deg' },
-//           { left: previousX + 'px', rotate: direction * 10 + 'deg' },
-//           { left: this.x + 'px', rotate: direction * -7 + 'deg' },
-//           { left: this.x + 'px', rotate: '0deg' },
-//         ],
-//         {
-//           duration: 300,
-//           fill: 'forwards',
-//         }
-//       );
-
-//       await animation.finished;
-//       // console.log(animation.pending);
-//       animation.commitStyles();
-
-//       // // Cancel the animation because of fill mode
-//       animation.cancel();
-//     } else {
-//       this.style.left = this.x + 'px';
-//     }
