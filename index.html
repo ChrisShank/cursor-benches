@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,21 +7,41 @@
     <title>cursor-benches</title>
     <style>
       html,
-      body {
+      body,
+      cursor-park {
         height: 100%;
-        margin: 0;
+        margin: 0.33rem;
+        background-color: rgb(188, 209, 228);
       }
 
-      body {
-        display: flex;
-        place-content: center;
-        place-items: center;
-        background-color: rgb(188, 209, 228);
+      cursor-park > cursor-bench {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        translate: -50% -50%;
+      }
+
+      article cursor-bench {
+        display: inline-block;
+        vertical-align: middle;
       }
     </style>
   </head>
   <body>
-    <cursor-bench></cursor-bench>
+    <cursor-park>
+      <cursor-bench>
+        <!-- <mouse-cursor x="40" y="0" color="purple" action="sitting"></mouse-cursor>
+        <mouse-cursor x="0" y="0" color="red" action="sitting-backwards"></mouse-cursor> -->
+      </cursor-bench>
+      <!-- <mouse-cursor x="100" y="100" color="green"></mouse-cursor> -->
+
+      <article>
+        Cursor Benches can be inlined with text too
+        <cursor-bench>
+          <!-- <mouse-cursor x="25" y="0" color="purple" action="sitting"></mouse-cursor> </cursor-bench -->
+        >.
+      </article>
+    </cursor-park>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

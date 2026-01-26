@@ -1,3 +1,1 @@
-import { CursorBench } from './bench';
-
-CursorBench.define();
+import './bench';
