@@ -25,7 +25,7 @@ globalStyles.replaceSync(`
   body {
     cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR))}, auto;
 
-    &:has(cursor-bench > mouse-cursor:state(self):state(sitting)) {
+    &:has(cursor-bench > mouse-cursor:state(self)) {
       cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR + '51'))}, auto;
       pointer-event: none;
     }
@@ -135,6 +135,7 @@ export class CursorBench extends ReactiveElement implements CursorObject {
   `;
 
   #cursor: MouseCursor | null = null;
+  #animation: Animation | null = null;
 
   get #park() {
     return this.closest('cursor-park');
@@ -154,11 +155,6 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
     this.#cursor.action = 'sitting';
-    // const rect = this.getBoundingClientRect();
-    // this.#cursor = document.createElement('sitting-cursor') as any;
-    // this.#cursor.color = CURSOR_COLOR;
-    // this.renderRoot.append(this.#cursor);
-    // this.#cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - this.#cursor.offsetWidth / 2;
     this.#cursor.x = 0;
     this.#cursor.y = 0;
     this.appendChild(this.#cursor);
@@ -170,6 +166,8 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
   releaseCursor(_cursor: MouseCursor): void {
     this.#cursor = null;
+    this.#animation?.cancel();
+    this.#animation = null;
     document.removeEventListener('click', this.#onReleaseClick, { capture: true });
     document.removeEventListener('keydown', this.#onKeydown);
     document.removeEventListener('keyup', this.#onKeyup);
@@ -200,6 +198,8 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
     if (cursor) {
       this.acquireCursor(cursor);
+      const rect = this.getBoundingClientRect();
+      cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
     }
   };
 
@@ -207,9 +207,9 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     if (this.#cursor === null) return;
     event.preventDefault();
     if (event.code === 'ArrowLeft' && this.#cursor.x > 0) {
-      this.#animateCursor(-1);
+      this.#animateCursor(-2);
     } else if (event.code === 'ArrowRight' && this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) {
-      this.#animateCursor(1);
+      this.#animateCursor(2);
     } else if (event.code === 'ArrowUp') {
       this.#cursor.action = 'sitting-forwards';
     } else if (event.code === 'ArrowDown') {
@@ -231,7 +231,7 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     const previousX = this.#cursor.x;
     const x = previousX + delta;
     const direction = Math.sign(delta);
-    const animation = this.#cursor.animate(
+    this.#animation = this.#cursor.animate(
       [
         { left: previousX + 'px', rotate: '0deg' },
         { left: previousX + 'px', rotate: direction * 7 + 'deg' },
@@ -244,10 +244,11 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       },
     );
 
-    // TODO: look into memory leak if someone gets off a bench when in the middle of an animation
-    await animation.finished;
-    animation.commitStyles();
-    animation.cancel();
+    await this.#animation.finished;
+
+    this.#animation.commitStyles();
+    this.#animation.cancel();
+    this.#animation = null;
     this.#cursor.x = x;
   }
 }
