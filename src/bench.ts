@@ -3,12 +3,11 @@ import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom
 import { cursor, sittingCursor, sittingCursorWithLegsForward, sittingCursorWithLegsBack } from './sprites';
 
 interface CursorObject {
-  claimCursor(cursor: MouseCursor): void;
-  revokeCursor(cursor: MouseCursor): void;
+  acquireCursor(cursor: MouseCursor): void;
+  releaseCursor(cursor: MouseCursor): void;
 }
 
 /* CONSTANTS */
-const CURSOR_SCALE = 1.5;
 const CURSOR_COLOR = '#4f9c15';
 const UUID = crypto.randomUUID();
 
@@ -26,7 +25,7 @@ globalStyles.replaceSync(`
   body {
     cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR))}, auto;
 
-    &:has(cursor-bench:state(sitting)) {
+    &:has(cursor-bench > mouse-cursor:state(self):state(sitting)) {
       cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR + '51'))}, auto;
       pointer-event: none;
     }
@@ -46,11 +45,8 @@ export class MouseCursor extends ReactiveElement {
       top: 0;
       left: 0;
       pointer-events: none;
+      user-select: none;
       z-index: calc(Infinity);
-    }
-
-    :host(:state(self)) {
-      display: none;
     }
   `;
 
@@ -74,8 +70,6 @@ export class MouseCursor extends ReactiveElement {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    console.log(this.self);
-
     if (this.self) {
       this.#internals.states.add('self');
     }
@@ -83,11 +77,6 @@ export class MouseCursor extends ReactiveElement {
     root.appendChild(this.#img);
 
     return root;
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    window.addEventListener('beforeunload', this.#onBeforeUnload);
   }
 
   protected update(changedProperties: PropertyValues<this>): void {
@@ -117,27 +106,10 @@ export class MouseCursor extends ReactiveElement {
       bg = sittingCursorWithLegsBack(this.color);
     } else {
       bg = cursor(this.color);
-      // document.addEventListener('mousemove', this.#onMouseMove);
     }
 
     this.#img.src = inlineSVG(bg);
   }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-
-    window.removeEventListener('beforeunload', this.#onBeforeUnload);
-    // document.removeEventListener('mousemove', this.#onMouseMove);
-  }
-
-  #onMouseMove = (event: MouseEvent) => {
-    this.x = event.pageX;
-    this.y = event.pageY;
-  };
-
-  #onBeforeUnload = () => {
-    this.remove();
-  };
 }
 
 export class CursorBench extends ReactiveElement implements CursorObject {
@@ -153,24 +125,105 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       background-image: url('/bench.webp');
       aspect-ratio: 2.03;
       width: 60px;
+      user-select: none;
     }
 
     ::slotted(mouse-cursor) {
+      display: block;
       top: -2px !important;
     }
   `;
+
+  #cursor: MouseCursor | null = null;
+
+  get #park() {
+    return this.closest('cursor-park');
+  }
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
     root.appendChild(document.createElement('slot'));
 
+    this.addEventListener('click', this.#onAcquireClick);
+
     return root;
   }
 
-  claimCursor(cursor: MouseCursor): void {}
+  acquireCursor(cursor: MouseCursor): void {
+    this.#cursor = cursor;
+    (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
+    this.#cursor.action = 'sitting';
+    // const rect = this.getBoundingClientRect();
+    // this.#cursor = document.createElement('sitting-cursor') as any;
+    // this.#cursor.color = CURSOR_COLOR;
+    // this.renderRoot.append(this.#cursor);
+    // this.#cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - this.#cursor.offsetWidth / 2;
+    this.#cursor.x = 0;
+    this.#cursor.y = 0;
+    this.appendChild(this.#cursor);
+    this.removeEventListener('click', this.#onAcquireClick);
+    document.addEventListener('click', this.#onReleaseClick, { capture: true });
+    document.addEventListener('keydown', this.#onKeydown);
+    document.addEventListener('keyup', this.#onKeyup);
+  }
 
-  revokeCursor(cursor: MouseCursor): void {}
+  releaseCursor(_cursor: MouseCursor): void {
+    this.#cursor = null;
+    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
+    document.removeEventListener('keydown', this.#onKeydown);
+    document.removeEventListener('keyup', this.#onKeyup);
+    this.addEventListener('click', this.#onAcquireClick);
+  }
+
+  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
+  #onReleaseClick = (event: PointerEvent) => {
+    if (this.#cursor === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (event.target === this) {
+      this.releaseCursor(this.#cursor);
+      // give control back to the park
+      this.#park?.acquireCursor(this.#cursor);
+    }
+  };
+
+  #onAcquireClick = (event: PointerEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+    if (cursor) {
+      this.acquireCursor(cursor);
+    }
+  };
+
+  #onKeydown = (event: KeyboardEvent) => {
+    if (this.#cursor === null) return;
+    event.preventDefault();
+    if (event.code === 'ArrowLeft' && this.#cursor.x > 0) {
+      this.#cursor.x -= 1;
+    } else if (event.code === 'ArrowRight' && this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) {
+      this.#cursor.x += 1;
+    } else if (event.code === 'ArrowUp') {
+      this.#cursor.action = 'sitting-forwards';
+    } else if (event.code === 'ArrowDown') {
+      this.#cursor.action = 'sitting-backwards';
+    }
+  };
+
+  #onKeyup = (event: KeyboardEvent) => {
+    if (this.#cursor === null) return;
+
+    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+      this.#cursor.action = 'sitting';
+    }
+  };
 }
 
 export class CursorPark extends ReactiveElement implements CursorObject {
@@ -180,14 +233,20 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     :host {
       display: block;
     }
-  `;
 
+    ::slotted(mouse-cursor:state(self)) {
+      display: none;
+    }
+  `;
+  #isCursorClaimed = false;
   #mouseCursor!: MouseCursor;
+  #cursorPosition = { x: 0, y: 0 };
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
     this.#mouseCursor = document.createElement('mouse-cursor');
+    this.#mouseCursor.color = CURSOR_COLOR;
     this.#mouseCursor.id = UUID;
 
     root.appendChild(document.createElement('slot'));
@@ -195,9 +254,45 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     return root;
   }
 
-  claimCursor(cursor: MouseCursor): void {}
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.acquireCursor(this.#mouseCursor);
+    document.addEventListener('mousemove', this.#onMouseMove);
+    window.addEventListener('beforeunload', this.#onBeforeUnload);
+  }
 
-  revokeCursor(cursor: MouseCursor): void {}
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.releaseCursor(this.#mouseCursor);
+    document.removeEventListener('mousemove', this.#onMouseMove);
+    window.removeEventListener('beforeunload', this.#onBeforeUnload);
+  }
+
+  acquireCursor(_cursor: MouseCursor): void {
+    this.#isCursorClaimed = true;
+    this.#mouseCursor.action = 'standing';
+    this.#mouseCursor.x = this.#cursorPosition.x;
+    this.#mouseCursor.y = this.#cursorPosition.y;
+    this.appendChild(this.#mouseCursor);
+  }
+
+  releaseCursor(_cursor: MouseCursor): void {
+    this.#isCursorClaimed = false;
+  }
+
+  #onBeforeUnload = () => this.#mouseCursor.remove();
+
+  // always track the cursor position
+  // is the part doesn't have ownership then store it for future use.
+  #onMouseMove = (event: MouseEvent) => {
+    if (this.#isCursorClaimed) {
+      this.#mouseCursor.x = event.pageX;
+      this.#mouseCursor.y = event.pageY;
+    } else {
+      this.#cursorPosition.x = event.pageX;
+      this.#cursorPosition.y = event.pageY;
+    }
+  };
 }
 
 declare global {
@@ -211,50 +306,6 @@ declare global {
 MouseCursor.define();
 CursorBench.define();
 CursorPark.define();
-
-/* SITTING DOWN LOGIC */
-// #onClick = (event: PointerEvent) => {
-//   if (this.#sittingCursor) {
-//     // this.#sittingCursor.remove();
-//     this.#sittingCursor = null;
-//     document.removeEventListener('keydown', this.#onKeydown);
-//     document.removeEventListener('keyup', this.#onKeyup);
-//     this.#internals.states.delete('sitting');
-//   } else {
-//     this.#internals.states.add('sitting');
-
-//     document.addEventListener('keydown', this.#onKeydown);
-//     document.addEventListener('keyup', this.#onKeyup);
-
-//     const rect = this.getBoundingClientRect();
-//     this.#sittingCursor = document.createElement('sitting-cursor') as any;
-//     this.#sittingCursor.color = CURSOR_COLOR;
-//     this.renderRoot.append(this.#sittingCursor);
-//     this.#sittingCursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - this.#sittingCursor.offsetWidth / 2;
-//   }
-// };
-
-// #onKeydown = (event: KeyboardEvent) => {
-//   if (this.#sittingCursor === null) return;
-//   event.preventDefault();
-//   if (event.code === 'ArrowLeft' && this.#sittingCursor.x > 0) {
-//     this.#sittingCursor.moveLeft();
-//   } else if (event.code === 'ArrowRight' && this.#sittingCursor.x + this.#sittingCursor.offsetWidth <= this.offsetWidth) {
-//     this.#sittingCursor.moveRight();
-//   } else if (event.code === 'ArrowUp') {
-//     this.#sittingCursor.legs = 'forwards';
-//   } else if (event.code === 'ArrowDown') {
-//     this.#sittingCursor.legs = 'backwards';
-//   }
-// };
-
-// #onKeyup = (event: KeyboardEvent) => {
-//   if (this.#sittingCursor === null) return;
-
-//   if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-//     this.#sittingCursor.legs = '';
-//   }
-// };
 
 /* SITTING ANIMATION LOGIC */
 //     const previousX = changedProperties.get('x');
