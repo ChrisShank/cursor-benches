@@ -18,6 +18,10 @@ To add a cursor park just need to import the `cursor-park` library that defines 
 
 # Background
 
+Cursors, both text and mouse alike, were [originally conceived](https://www.superkids.com/aweb/pages/features/mouse/mouse.html) as extensions of our bodies, tiny projections that we directly control as we navigate through and interact with cyberspace. Over time, our relationship to them evolved beyond extension and towards embodiment. Mouse cursors began contextualizing the actions we can take, sometimes as little hands, sometimes warning us when we can't interact with something. Furthermore, as we more frequently co-habituate software in realtime, cursors have become the defacto means to indicate our presence to others – they have come to directly signify ourselves to our peers. Yet something feels off, our presence as embodied through cursors are ghosts, inert, inexpressive, and, at times, [overwhelming](https://maggieappleton.com/ambient-copresence). Worst of all, our cursors (and thus ourselves) live under [constant surveillance](https://www.semanticscholar.org/paper/What-can-a-mouse-cursor-tell-us-more%3A-correlation-Chen-Anderson/4b0771ee0a3417aae94643fcaaabfd922367f8f5), trying to infer our intentions, thoughts, and emotions.
+
+This project reimagines our relationship to the mouse cursor.
+
 # How does it work?
 
 Think of cursor parks as an extensible, multiplayer game engine built on top of HTML. The goal is to make cursor parks:
@@ -26,7 +30,7 @@ Think of cursor parks as an extensible, multiplayer game engine built on top of 
 - to make it extensible so it's possible add news types of objects and interactions that cursors can interact with.
 - make all of this work with realtime multiplayer
 
-Cursors are a custom HTML element called `<mouse-cursor>`. They have a position (`x` and `y` attributes), `color` and a current `action`. The action attribute maps to a custom sprite for the cursor like pointing, standing, sitting, etc. New cursor actions can be added the static property `MouseCursor.addAction`. Think of these HTML cursors as a material that are instrumented by the outside. Their immediate HTML parent dictates their position, current actions, and interactions. As cursors interact with different objects they are re-parented in the DOM to indicate what object the cursor is interacting with.
+Cursors are a custom HTML element called `<mouse-cursor>`. They have attributes for a position (`x` and `y`), `color` and the current `action` (e.g. sprite). The action attribute maps to a custom sprite for the cursor like pointing, standing, sitting, etc. New cursor actions can be added the static property `MouseCursor.addAction`. Think of these HTML cursors as a material that are instrumented by the outside. Their immediate HTML parent dictates their position, current actions, and interactions. As cursors interact with different objects they are re-parented in the DOM to indicate what object the cursor is interacting with.
 
 The default parent of a `mouse-cursor` is the custom HTML element called `<cursor-park>`. All other objects that a mouse cursor can interact with should be enclosed in this element. It's a best practice that a cursor park contains all of the web pages content (e.g. should take up the whole page). By default, a cursor wandering around a park works and looks exactly how your cursor normally is.
 
