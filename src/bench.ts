@@ -27,6 +27,79 @@ const inlineSVG = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent
 
 const convertSVGIntoCssURL = (svg: string) => `url('${inlineSVG(svg)}')`;
 
+export interface CursorKeyFrame {
+  percentage: number;
+  x?: number;
+  y?: number;
+  rotation?: number;
+}
+
+interface ComputedCursorKeyFrame {
+  timeDiff: number;
+  x: number | undefined;
+  y: number | undefined;
+  rotation: number | undefined;
+}
+
+export class CursorAnimation {
+  #cursor;
+  #index = 0;
+  #keyframes: ComputedCursorKeyFrame[];
+  #currentKeyFrame: ComputedCursorKeyFrame | undefined;
+  #isPending = false;
+  #timeout = -1;
+  #promise = Promise.withResolvers<void>();
+
+  get pending() {
+    return this.#isPending;
+  }
+
+  get finished() {
+    return this.#promise.promise;
+  }
+
+  constructor(cursor: MouseCursor, duration: number, keyframes: CursorKeyFrame[]) {
+    this.#cursor = cursor;
+    let previousTime = 0;
+    this.#keyframes = keyframes.map(({ percentage, x, y, rotation }) => {
+      const time = (duration * percentage) / 100;
+      const timeDiff = time - previousTime;
+      previousTime = time;
+      return { timeDiff, x, y, rotation };
+    });
+  }
+
+  start() {
+    this.#isPending = true;
+    this.#executeKeyFrame();
+  }
+
+  cancel() {
+    this.#isPending = false;
+    clearTimeout(this.#timeout);
+    this.#promise.resolve();
+  }
+
+  #executeKeyFrame = () => {
+    // commit the current keyframe values
+    if (this.#currentKeyFrame !== undefined) {
+      if (this.#currentKeyFrame.x !== undefined) this.#cursor.x = this.#currentKeyFrame.x;
+      if (this.#currentKeyFrame.y !== undefined) this.#cursor.y = this.#currentKeyFrame.y;
+      if (this.#currentKeyFrame.rotation !== undefined) this.#cursor.rotation = this.#currentKeyFrame.rotation;
+    }
+
+    // check if there is another keyframe
+    this.#currentKeyFrame = this.#keyframes[this.#index];
+    if (this.#currentKeyFrame === undefined) {
+      this.#promise.resolve();
+    } else {
+      // increment index for next time
+      this.#index += 1;
+      this.#timeout = setTimeout(this.#executeKeyFrame, this.#currentKeyFrame.timeDiff);
+    }
+  };
+}
+
 /* GLOBAL STYLES */
 const globalStyles = new CSSStyleSheet();
 
@@ -82,6 +155,8 @@ export class MouseCursor extends ReactiveElement {
 
   @property({ type: Number, reflect: true }) y = 0;
 
+  @property({ type: Number, reflect: true }) rotation = 0;
+
   @property({ type: String, reflect: true }) color = 'black';
 
   @property({ type: String, reflect: true }) action = 'pointing';
@@ -116,8 +191,11 @@ export class MouseCursor extends ReactiveElement {
       this.style.top = this.y + 'px';
     }
 
+    if (changedProperties.has('rotation')) {
+      this.style.rotate = this.rotation + 'deg';
+    }
+
     if (changedProperties.has('action')) {
-      console.log(this.action);
       const previousAction = changedProperties.get('action');
       if (previousAction) {
         this.#internals.states.delete(previousAction);
@@ -155,7 +233,7 @@ export class CursorBench extends ReactiveElement implements CursorObject {
   `;
 
   #cursor: MouseCursor | null = null;
-  #animation: Animation | null = null;
+  #animation: CursorAnimation | null = null;
 
   get #park() {
     return this.closest('cursor-park');
@@ -249,32 +327,25 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     }
   };
 
-  async #animateCursor(delta: number) {
-    // If we're in the middle of an animation then ignore the request
-    if (this.#cursor === null || this.#animation) return;
+  #animateCursor(delta: number) {
+    if (this.#cursor === null) return;
+
+    this.#animation?.cancel();
 
     const previousX = this.#cursor.x;
     const x = previousX + delta;
     const direction = Math.sign(delta);
-    this.#animation = this.#cursor.animate(
-      [
-        { left: previousX + 'px', rotate: '0deg' },
-        { left: previousX + 'px', rotate: direction * 10 + 'deg' },
-        { left: x + 'px', rotate: direction * -7 + 'deg' },
-        { left: x + 'px', rotate: '0deg' },
-      ],
-      {
-        duration: 250,
-        fill: 'forwards',
-      },
-    );
 
-    await this.#animation.finished;
+    this.#animation = new CursorAnimation(this.#cursor, 250, [
+      { percentage: 0, x: previousX, rotation: 0 },
+      { percentage: 33, x: previousX, rotation: direction * 10 },
+      { percentage: 66, x, rotation: direction * -7 },
+      { percentage: 100, x, rotation: 0 },
+    ]);
 
-    this.#animation.commitStyles();
-    this.#animation.cancel();
-    this.#animation = null;
-    this.#cursor.x = x;
+    this.#animation.start();
+
+    this.#animation.finished.then(() => (this.#animation = null));
   }
 }
 
