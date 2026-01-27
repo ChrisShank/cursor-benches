@@ -1,6 +1,14 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
 import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom/ReactiveElement';
-import { cursor, sittingCursor, sittingCursorWithLegsForward, sittingCursorWithLegsBack } from './sprites';
+import {
+  pointingCursor,
+  sittingCursor,
+  sittingCursorWithLegsForward,
+  sittingCursorWithLegsBack,
+  standingCursor,
+  slidingCursor,
+} from './sprites';
+// import '@folkjs/labs/standalone/folk-sync-attribute';
 
 interface CursorObject {
   acquireCursor(cursor: MouseCursor): void;
@@ -24,11 +32,21 @@ const globalStyles = new CSSStyleSheet();
 
 globalStyles.replaceSync(`
   body {
-    cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR))}, auto;
+    cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR))}, auto;
 
     &:has(cursor-bench > mouse-cursor:state(self)) {
-      cursor: ${convertSVGIntoCssURL(cursor(CURSOR_COLOR + '51'))}, auto;
+      cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51'))}, auto;
       pointer-event: none;
+    }
+  }
+
+  @keyframes slide {
+    from {
+      offset-distance: 56%;
+    }
+
+    to {
+      offset-distance: 99%;
     }
   }
 `);
@@ -57,9 +75,7 @@ export class MouseCursor extends ReactiveElement {
 
   @property({ type: String, reflect: true }) color = 'black';
 
-  @property({ type: String, reflect: true }) action = 'standing';
-
-  // @property({ type: Number, reflect: true }) scale = 1;
+  @property({ type: String, reflect: true }) action = 'pointing';
 
   get self() {
     return UUID === this.id;
@@ -91,25 +107,32 @@ export class MouseCursor extends ReactiveElement {
       this.style.top = this.y + 'px';
     }
 
-    const previousAction = changedProperties.get('action');
-    if (previousAction) {
-      this.#internals.states.delete(previousAction);
+    if (changedProperties.has('action')) {
+      console.log(this.action);
+      const previousAction = changedProperties.get('action');
+      if (previousAction) {
+        this.#internals.states.delete(previousAction);
+      }
+
+      this.#internals.states.add(this.action);
+
+      let bg;
+      if (this.action === 'sitting') {
+        bg = sittingCursor(this.color);
+      } else if (this.action === 'standing') {
+        bg = standingCursor(this.color);
+      } else if (this.action === 'sliding') {
+        bg = slidingCursor(this.color);
+      } else if (this.action === 'sitting-forwards') {
+        bg = sittingCursorWithLegsForward(this.color);
+      } else if (this.action === 'sitting-backwards') {
+        bg = sittingCursorWithLegsBack(this.color);
+      } else {
+        bg = pointingCursor(this.color);
+      }
+
+      this.#img.src = inlineSVG(bg);
     }
-
-    this.#internals.states.add(this.action);
-
-    let bg;
-    if (this.action === 'sitting') {
-      bg = sittingCursor(this.color);
-    } else if (this.action === 'sitting-forwards') {
-      bg = sittingCursorWithLegsForward(this.color);
-    } else if (this.action === 'sitting-backwards') {
-      bg = sittingCursorWithLegsBack(this.color);
-    } else {
-      bg = cursor(this.color);
-    }
-
-    this.#img.src = inlineSVG(bg);
   }
 }
 
@@ -240,8 +263,8 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     this.#animation = this.#cursor.animate(
       [
         { left: previousX + 'px', rotate: '0deg' },
-        { left: previousX + 'px', rotate: direction * 7 + 'deg' },
-        { left: x + 'px', rotate: direction * -5 + 'deg' },
+        { left: previousX + 'px', rotate: direction * 10 + 'deg' },
+        { left: x + 'px', rotate: direction * -7 + 'deg' },
         { left: x + 'px', rotate: '0deg' },
       ],
       {
@@ -259,6 +282,48 @@ export class CursorBench extends ReactiveElement implements CursorObject {
   }
 }
 
+export class CursorSlide extends ReactiveElement implements CursorObject {
+  static tagName = 'cursor-slide';
+
+  static styles = css`
+    :host {
+      width: 44px;
+      aspect-ratio: 1.189;
+      display: block;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    ::slotted(mouse-cursor) {
+      animation: slide 3000ms infinite ease-out;
+      offset-path: path(
+        'M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z'
+      );
+    }
+  `;
+
+  #cursor: MouseCursor | null = null;
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    (root as ShadowRoot).setHTMLUnsafe(`<svg viewBox="0 0 44 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+<line x1="4.62474" y1="33" x2="4.62474" y2="1" stroke="black" stroke-width="2" stroke-linecap="square"/>
+<path d="M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z" fill="black"/>
+</svg>
+<slot></slot>`);
+
+    return root;
+  }
+
+  acquireCursor(_cursor: MouseCursor): void {}
+
+  releaseCursor(_cursor: MouseCursor): void {}
+}
+
 export class CursorPark extends ReactiveElement implements CursorObject {
   static tagName = 'cursor-park';
 
@@ -271,6 +336,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
       display: none;
     }
   `;
+
   #isCursorClaimed = false;
   #mouseCursor!: MouseCursor;
   #cursorPosition = { x: 0, y: 0 };
@@ -303,7 +369,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
   acquireCursor(_cursor: MouseCursor): void {
     this.#isCursorClaimed = true;
-    this.#mouseCursor.action = 'standing';
+    this.#mouseCursor.action = 'pointing';
     this.#mouseCursor.x = this.#cursorPosition.x;
     this.#mouseCursor.y = this.#cursorPosition.y;
     this.appendChild(this.#mouseCursor);
@@ -332,10 +398,12 @@ declare global {
   interface HTMLElementTagNameMap {
     'mouse-cursor': MouseCursor;
     'cursor-bench': CursorBench;
+    'cursor-slide': CursorSlide;
     'cursor-park': CursorPark;
   }
 }
 
 MouseCursor.define();
 CursorBench.define();
+CursorSlide.define();
 CursorPark.define();

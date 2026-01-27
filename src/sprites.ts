@@ -1,5 +1,7 @@
-export const cursor = (color: string, scale = 1.5) => `<svg width="${13 * scale}" height="${
-  20 * scale
+const SCALE = 1.5;
+
+export const pointingCursor = (color: string) => `<svg width="${15 * SCALE}" height="${
+  20 * SCALE
 }" viewBox="0 0 13 20" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g filter="url(#filter0_d_3001_67)">
     <mask id="path-1-outside-1_3001_67" maskUnits="userSpaceOnUse" x="0.5" y="0.500023" width="11" height="18" fill="black">
@@ -23,8 +25,33 @@ export const cursor = (color: string, scale = 1.5) => `<svg width="${13 * scale}
   </defs>
 </svg>`;
 
-export const sittingCursor = (color: string, scale = 1.5) => `<svg width="${13 * scale}" height="${
-  21 * scale
+export const standingCursor = (color: string) => `<svg width="${13 * SCALE}" height="${
+  20 * SCALE
+}" viewBox="0 0 15 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g filter="url(#filter0_d_3307_59)">
+    <mask id="path-1-outside-1_3307_59" maskUnits="userSpaceOnUse" x="-1.04969" y="0.187841" width="16.7878" height="19.9527" fill="black">
+      <rect fill="white" x="-1.04969" y="0.187841" width="16.7878" height="19.9527"/>
+      <path d="M10.7006 12.8613L7.10308 11.3269L7.07263 17.5513L4.95464 17.5386L4.98787 11.0638L1.50002 12.3959L6.14753 1.5L10.7006 12.8613Z"/>
+    </mask>
+    <path d="M10.7006 12.8613L7.10308 11.3269L7.07263 17.5513L4.95464 17.5386L4.98787 11.0638L1.50002 12.3959L6.14753 1.5L10.7006 12.8613Z" fill="${color}"/>
+    <path d="M10.7006 12.8613L10.4064 13.5512C10.6853 13.6702 11.0083 13.6095 11.2251 13.3975C11.4418 13.1855 11.5096 12.8638 11.3968 12.5823L10.7006 12.8613ZM7.10308 11.3269L7.39733 10.637C7.16624 10.5384 6.90116 10.5621 6.6912 10.7001C6.48125 10.838 6.35431 11.072 6.35309 11.3232L7.10308 11.3269ZM7.07263 17.5513L7.06815 18.3013C7.2672 18.3025 7.45855 18.2245 7.60007 18.0845C7.74158 17.9445 7.82164 17.754 7.82262 17.555L7.07263 17.5513ZM4.95464 17.5386L4.20465 17.5348C4.20253 17.9488 4.53621 18.2862 4.95017 18.2886L4.95464 17.5386ZM4.98787 11.0638L5.73786 11.0676C5.73913 10.8202 5.61824 10.588 5.41478 10.4471C5.21131 10.3063 4.95145 10.2749 4.72027 10.3631L4.98787 11.0638ZM1.50002 12.3959L0.810155 12.1017C0.692071 12.3785 0.750921 12.6991 0.959625 12.916C1.16833 13.1329 1.48646 13.204 1.76762 13.0966L1.50002 12.3959ZM6.14753 1.5L6.84371 1.22101C6.73081 0.939292 6.45926 0.753386 6.15579 0.750045C5.85231 0.746705 5.57674 0.926588 5.45766 1.20575L6.14753 1.5ZM10.7006 12.8613L10.9949 12.1715L7.39733 10.637L7.10308 11.3269L6.80882 12.0167L10.4064 13.5512L10.7006 12.8613ZM7.10308 11.3269L6.35309 11.3232L6.32263 17.5476L7.07263 17.5513L7.82262 17.555L7.85307 11.3305L7.10308 11.3269ZM7.07263 17.5513L7.0771 16.8013L4.95912 16.7887L4.95464 17.5386L4.95017 18.2886L7.06815 18.3013L7.07263 17.5513ZM4.95464 17.5386L5.70463 17.5425L5.73786 11.0676L4.98787 11.0638L4.23788 11.0599L4.20465 17.5348L4.95464 17.5386ZM4.98787 11.0638L4.72027 10.3631L1.23242 11.6953L1.50002 12.3959L1.76762 13.0966L5.25547 11.7644L4.98787 11.0638ZM1.50002 12.3959L2.18989 12.6902L6.8374 1.79425L6.14753 1.5L5.45766 1.20575L0.810155 12.1017L1.50002 12.3959ZM6.14753 1.5L5.45135 1.77899L10.0044 13.1403L10.7006 12.8613L11.3968 12.5823L6.84371 1.22101L6.14753 1.5Z" fill="white" fill-opacity="0.9" mask="url(#path-1-outside-1_3307_59)"/>
+  </g>
+  <defs>
+    <filter id="filter0_d_3307_59" x="0" y="0" width="12.7006" height="19.5513" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dx="0.25" dy="0.25"/>
+      <feGaussianBlur stdDeviation="0.5"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_3307_59"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3307_59" result="shape"/>
+    </filter>
+  </defs>
+</svg>`;
+
+export const sittingCursor = (color: string) => `<svg width="${13 * SCALE}" height="${
+  21 * SCALE
 }" viewBox="0 0 13 21" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g filter="url(#filter0_d_3063_3)">
 <mask id="path-1-outside-1_3063_3" maskUnits="userSpaceOnUse" x="-1.16406" y="0.223436" width="16.3802" height="20.6403" fill="black">
@@ -48,8 +75,8 @@ export const sittingCursor = (color: string, scale = 1.5) => `<svg width="${13 *
 </defs>
 </svg>`;
 
-export const sittingCursorWithLegsBack = (color: string, scale = 1.5) => `<svg width="${13 * scale}" height="${
-  21 * scale
+export const sittingCursorWithLegsBack = (color: string) => `<svg width="${13 * SCALE}" height="${
+  21 * SCALE
 }" viewBox="0 0 13 21" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g filter="url(#filter0_d_3063_8)">
     <mask id="path-1-outside-1_3063_8" maskUnits="userSpaceOnUse" x="-1.16406" y="0.223434" width="16.3802" height="20.6403" fill="black">
@@ -73,8 +100,8 @@ export const sittingCursorWithLegsBack = (color: string, scale = 1.5) => `<svg w
   </defs>
 </svg>`;
 
-export const sittingCursorWithLegsForward = (color: string, scale = 1.5) => `<svg width="${13 * scale}" height="${
-  21 * scale
+export const sittingCursorWithLegsForward = (color: string) => `<svg width="${13 * SCALE}" height="${
+  21 * SCALE
 }" viewBox="0 0 13 21" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g filter="url(#filter0_d_3063_18)">
     <mask id="path-1-outside-1_3063_18" maskUnits="userSpaceOnUse" x="-0.830059" y="0.223434" width="16.9888" height="20.0317" fill="black">
@@ -97,3 +124,29 @@ export const sittingCursorWithLegsForward = (color: string, scale = 1.5) => `<sv
     </filter>
   </defs>
 </svg>`;
+
+export const slidingCursor = (
+  color: string,
+) => `<svg width="${SCALE * 13}" height="${SCALE * 18}" viewBox="0 0 13 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g filter="url(#filter0_d_3310_64)">
+    <mask id="path-1-outside-1_3310_64" maskUnits="userSpaceOnUse" x="0.500004" y="0.500036" width="11" height="17" fill="black">
+      <rect fill="white" x="0.500004" y="0.500036" width="11" height="17"/>
+      <path d="M9 10.1641H6.2334L7.00489 11.9971L10.4522 15.1807L8.5 16L5.05469 12.8174L4.19336 10.7686L2 13L1.5 1.50004L9 10.1641Z"/>
+    </mask>
+    <path d="M9 10.1641H6.2334L7.00489 11.9971L10.4522 15.1807L8.5 16L5.05469 12.8174L4.19336 10.7686L2 13L1.5 1.50004L9 10.1641Z" fill="${color}"/>
+    <path d="M9 10.1641V10.9141C9.29356 10.9141 9.56014 10.7428 9.68215 10.4758C9.80417 10.2088 9.75919 9.89518 9.56706 9.67323L9 10.1641ZM6.2334 10.1641V9.4141C5.98216 9.4141 5.74761 9.5399 5.60862 9.74919C5.46963 9.95849 5.44467 10.2235 5.54213 10.455L6.2334 10.1641ZM7.00489 11.9971L6.31362 12.2881C6.35516 12.3868 6.41737 12.4754 6.49605 12.5481L7.00489 11.9971ZM10.4522 15.1807L10.7424 15.8723C10.9777 15.7735 11.1466 15.5619 11.1908 15.3106C11.235 15.0594 11.1484 14.8028 10.961 14.6297L10.4522 15.1807ZM8.5 16L7.99109 16.551C8.20693 16.7503 8.51932 16.8053 8.79026 16.6916L8.5 16ZM5.05469 12.8174L4.3633 13.1081C4.40484 13.2069 4.46706 13.2956 4.54578 13.3683L5.05469 12.8174ZM4.19336 10.7686L4.88475 10.4779C4.7875 10.2466 4.58102 10.0793 4.33457 10.032C4.08813 9.98476 3.83439 10.0639 3.65849 10.2428L4.19336 10.7686ZM2 13L1.25071 13.0326C1.26368 13.3309 1.45237 13.5931 1.73112 13.7002C2.00987 13.8072 2.32556 13.7387 2.53488 13.5258L2 13ZM1.5 1.50004L2.06706 1.00917C1.85817 0.767861 1.51945 0.685183 1.22287 0.803115C0.9263 0.921048 0.736848 1.21375 0.750712 1.53261L1.5 1.50004ZM9 10.1641V9.4141H6.2334V10.1641V10.9141H9V10.1641ZM6.2334 10.1641L5.54213 10.455L6.31362 12.2881L7.00489 11.9971L7.69615 11.7062L6.92467 9.87315L6.2334 10.1641ZM7.00489 11.9971L6.49605 12.5481L9.94331 15.7317L10.4522 15.1807L10.961 14.6297L7.51373 11.4461L7.00489 11.9971ZM10.4522 15.1807L10.1619 14.4891L8.20975 15.3085L8.5 16L8.79026 16.6916L10.7424 15.8723L10.4522 15.1807ZM8.5 16L9.00891 15.4491L5.5636 12.2665L5.05469 12.8174L4.54578 13.3683L7.99109 16.551L8.5 16ZM5.05469 12.8174L5.74608 12.5268L4.88475 10.4779L4.19336 10.7686L3.50198 11.0593L4.3633 13.1081L5.05469 12.8174ZM4.19336 10.7686L3.65849 10.2428L1.46513 12.4743L2 13L2.53488 13.5258L4.72824 11.2943L4.19336 10.7686ZM2 13L2.7493 12.9675L2.2493 1.46746L1.5 1.50004L0.750712 1.53261L1.25071 13.0326L2 13ZM1.5 1.50004L0.93295 1.9909L8.43295 10.655L9 10.1641L9.56706 9.67323L2.06706 1.00917L1.5 1.50004Z" fill="white" fill-opacity="0.9" mask="url(#path-1-outside-1_3310_64)"/>
+  </g>
+  <defs>
+    <filter id="filter0_d_3310_64" x="0" y="0" width="12.4522" height="18.0001" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dx="0.25" dy="0.25"/>
+      <feGaussianBlur stdDeviation="0.5"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_3310_64"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3310_64" result="shape"/>
+    </filter>
+  </defs>
+</svg>
+`;
