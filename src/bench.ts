@@ -8,7 +8,8 @@ interface CursorObject {
 }
 
 /* CONSTANTS */
-const CURSOR_COLOR = '#4f9c15';
+const COLORS = ['#447F59', '#A10314', '#FB546E', '#8750C9', '#E601B2', '#2962C5'];
+const CURSOR_COLOR = COLORS[Math.floor(Math.random() * COLORS.length)];
 const UUID = crypto.randomUUID();
 
 /* UTILITIES */
@@ -205,14 +206,18 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
   #onKeydown = (event: KeyboardEvent) => {
     if (this.#cursor === null) return;
-    event.preventDefault();
+
     if (event.code === 'ArrowLeft' && this.#cursor.x > 0) {
+      event.preventDefault();
       this.#animateCursor(-2);
     } else if (event.code === 'ArrowRight' && this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) {
+      event.preventDefault();
       this.#animateCursor(2);
     } else if (event.code === 'ArrowUp') {
+      event.preventDefault();
       this.#cursor.action = 'sitting-forwards';
     } else if (event.code === 'ArrowDown') {
+      event.preventDefault();
       this.#cursor.action = 'sitting-backwards';
     }
   };
@@ -226,7 +231,8 @@ export class CursorBench extends ReactiveElement implements CursorObject {
   };
 
   async #animateCursor(delta: number) {
-    if (this.#cursor === null) return;
+    // If we're in the middle of an animation then ignore the request
+    if (this.#cursor === null || this.#animation) return;
 
     const previousX = this.#cursor.x;
     const x = previousX + delta;
