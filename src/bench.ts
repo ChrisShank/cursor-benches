@@ -150,7 +150,7 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
     ::slotted(mouse-cursor) {
       display: block;
-      top: -2px !important;
+      top: -4px !important;
     }
   `;
 
@@ -294,7 +294,9 @@ export class CursorSlide extends ReactiveElement implements CursorObject {
     }
 
     ::slotted(mouse-cursor) {
-      animation: slide 3000ms infinite ease-out;
+      animation: slide 1500ms infinite cubic-bezier(0.3, 0.68, 0.25, 1);
+      offset-anchor: 50% 70%;
+      offset-rotate: 0deg;
       offset-path: path(
         'M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z'
       );
