@@ -69,6 +69,15 @@ export class MouseCursor extends ReactiveElement {
     }
   `;
 
+  static actions = new Map([
+    ['pointing', pointingCursor],
+    ['sitting', sittingCursor],
+    ['sitting-backwards', sittingCursorWithLegsForward],
+    ['sitting-forwards', sittingCursorWithLegsBack],
+    ['standing', standingCursor],
+    ['sliding', slidingCursor],
+  ]);
+
   @property({ type: Number, reflect: true }) x = 0;
 
   @property({ type: Number, reflect: true }) y = 0;
@@ -116,22 +125,9 @@ export class MouseCursor extends ReactiveElement {
 
       this.#internals.states.add(this.action);
 
-      let bg;
-      if (this.action === 'sitting') {
-        bg = sittingCursor(this.color);
-      } else if (this.action === 'standing') {
-        bg = standingCursor(this.color);
-      } else if (this.action === 'sliding') {
-        bg = slidingCursor(this.color);
-      } else if (this.action === 'sitting-forwards') {
-        bg = sittingCursorWithLegsForward(this.color);
-      } else if (this.action === 'sitting-backwards') {
-        bg = sittingCursorWithLegsBack(this.color);
-      } else {
-        bg = pointingCursor(this.color);
-      }
+      const actionSprite = MouseCursor.actions.get(this.action) || pointingCursor;
 
-      this.#img.src = inlineSVG(bg);
+      this.#img.src = inlineSVG(actionSprite(this.color));
     }
   }
 }
