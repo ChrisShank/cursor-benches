@@ -7,8 +7,8 @@ import {
   sittingCursorWithLegsBack,
   standingCursor,
   slidingCursor,
+  crouching,
 } from './sprites';
-// import '@folkjs/labs/standalone/folk-sync-attribute';
 
 interface CursorObject {
   acquireCursor(cursor: MouseCursor): void;
@@ -109,17 +109,6 @@ globalStyles.replaceSync(`
 
     &:has(cursor-bench > mouse-cursor:state(self)) {
       cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51'))}, auto;
-      pointer-event: none;
-    }
-  }
-
-  @keyframes slide {
-    from {
-      offset-distance: 56%;
-    }
-
-    to {
-      offset-distance: 99%;
     }
   }
 `);
@@ -145,10 +134,11 @@ export class MouseCursor extends ReactiveElement {
   static actions = new Map([
     ['pointing', pointingCursor],
     ['sitting', sittingCursor],
-    ['sitting-backwards', sittingCursorWithLegsForward],
-    ['sitting-forwards', sittingCursorWithLegsBack],
+    ['sitting-backwards', sittingCursorWithLegsBack],
+    ['sitting-forwards', sittingCursorWithLegsForward],
     ['standing', standingCursor],
     ['sliding', slidingCursor],
+    ['crouching', crouching],
   ]);
 
   @property({ type: Number, reflect: true }) x = 0;
@@ -363,14 +353,35 @@ export class CursorSlide extends ReactiveElement implements CursorObject {
       width: 100%;
       height: 100%;
     }
+  `;
 
-    ::slotted(mouse-cursor) {
-      animation: slide 1500ms infinite cubic-bezier(0.3, 0.68, 0.25, 1);
-      offset-anchor: 50% 70%;
-      offset-rotate: 0deg;
-      offset-path: path(
-        'M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z'
-      );
+  #cursor: MouseCursor | null = null;
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    (root as ShadowRoot).setHTMLUnsafe(`<svg viewBox="0 0 44 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+<line x1="4.62474" y1="33" x2="4.62474" y2="1" stroke="black" stroke-width="2" stroke-linecap="square"/>
+<path d="M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z" fill="black"/>
+</svg>
+<slot></slot>`);
+
+    return root;
+  }
+
+  acquireCursor(_cursor: MouseCursor): void {}
+
+  releaseCursor(_cursor: MouseCursor): void {}
+}
+
+export class CursorSign extends ReactiveElement implements CursorObject {
+  static tagName = 'cursor-sign';
+
+  static styles = css`
+    :host {
+      width: 44px;
+      aspect-ratio: 1.189;
+      display: block;
     }
   `;
 
