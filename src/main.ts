@@ -1,1 +1,1 @@
-import './bench';
+import './index.ts';
