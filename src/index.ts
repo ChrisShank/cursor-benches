@@ -10,6 +10,7 @@ import {
   slidingCursor,
   crouching,
 } from './sprites';
+import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
 
 interface CursorObject {
@@ -23,6 +24,8 @@ const SCALES = [1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9];
 const CURSOR_COLOR = COLORS[Math.floor(Math.random() * COLORS.length)];
 const CURSOR_SCALE = SCALES[Math.floor(Math.random() * SCALES.length)];
 const UUID = crypto.randomUUID();
+
+PerfectCursor.MAX_INTERVAL = 100;
 
 /* UTILITIES */
 const clamp = (min: number, value: number, max: number) => Math.min(Math.max(value, min), max);
@@ -440,6 +443,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
   @property({ type: String, reflect: true }) src = '';
 
   #cursors = new Map<string, MouseCursor>();
+  #perfectCursors = new Map<string, PerfectCursor>();
   #isCursorClaimed = false;
   #cursorPosition = { x: 0, y: 0 };
   #handle: DocHandle<CursorDoc> | null = null;
@@ -546,23 +550,33 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     });
   }
 
-  #onChange = ({ patches }: DocHandleChangePayload<CursorDoc>) => {
-    console.log(patches);
+  #onChange = ({ doc, patches }: DocHandleChangePayload<CursorDoc>) => {
     for (const patch of patches) {
       if (patch.action === 'put') {
         const [_, id, key] = patch.path;
 
         // Create Cursor
         if (key === undefined) {
-          console.log('create cursor', id);
           const cursor = document.createElement('mouse-cursor');
           cursor.id = id as string;
           this.#cursors.set(id as string, cursor);
+          this.#perfectCursors.set(
+            id as string,
+            new PerfectCursor(([x, y]) => {
+              cursor.x = x;
+              cursor.y = y;
+            }),
+          );
           this.acquireCursor(cursor);
         } else {
           const cursor = this.#cursors.get(id as string);
-          // ignore changes to id property.
-          if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale')) {
+
+          if (cursor === undefined) return;
+
+          if ((key === 'x' || key === 'y') && !cursor.self && cursor.action === 'pointing') {
+            const data = doc.cursors[id];
+            this.#perfectCursors.get(id as string)?.addPoint([data.x, data.y]);
+          } else if (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale') {
             cursor[key] = patch.value as never;
           }
         }
@@ -579,6 +593,8 @@ export class CursorPark extends ReactiveElement implements CursorObject {
         const cursor = this.#cursors.get(id as string);
         cursor?.remove();
         this.#cursors.delete(id as string);
+        this.#perfectCursors.get(id as string)?.dispose();
+        this.#perfectCursors.delete(id as string);
       }
     }
   };
@@ -588,7 +604,6 @@ export class CursorPark extends ReactiveElement implements CursorObject {
   }
 
   #onBeforeUnload = () => {
-    console.log('cleanup');
     this.#handle?.change((doc) => {
       delete doc.cursors[UUID];
     });
