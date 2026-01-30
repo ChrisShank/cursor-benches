@@ -1,5 +1,6 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
 import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom/ReactiveElement';
+import { findCssSelector } from '@folkjs/dom/css-selector';
 import {
   pointingCursor,
   sittingCursor,
@@ -9,6 +10,7 @@ import {
   slidingCursor,
   crouching,
 } from './sprites';
+import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
 
 interface CursorObject {
   acquireCursor(cursor: MouseCursor): void;
@@ -355,7 +357,7 @@ export class CursorSlide extends ReactiveElement implements CursorObject {
     }
   `;
 
-  #cursor: MouseCursor | null = null;
+  // #cursor: MouseCursor | null = null;
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
@@ -385,7 +387,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     }
   `;
 
-  #cursor: MouseCursor | null = null;
+  // #cursor: MouseCursor | null = null;
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
@@ -404,6 +406,19 @@ export class CursorSign extends ReactiveElement implements CursorObject {
   releaseCursor(_cursor: MouseCursor): void {}
 }
 
+interface CursorItem {
+  action: string;
+  color: string;
+  rotation: number;
+  x: number;
+  y: number;
+  parent: string;
+}
+
+interface CursorDoc {
+  cursors: Record<string, CursorItem>;
+}
+
 export class CursorPark extends ReactiveElement implements CursorObject {
   static tagName = 'cursor-park';
 
@@ -417,16 +432,16 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     }
   `;
 
+  @property({ type: String, reflect: true }) src = '';
+
+  #cursors = new Map<string, MouseCursor>();
   #isCursorClaimed = false;
-  #mouseCursor!: MouseCursor;
   #cursorPosition = { x: 0, y: 0 };
+  #handle: DocHandle<CursorDoc> | null = null;
+  #repo = new Repo({ network: [new WebSocketClientAdapter('wss://sync.automerge.org')] });
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
-
-    this.#mouseCursor = document.createElement('mouse-cursor');
-    this.#mouseCursor.color = CURSOR_COLOR;
-    this.#mouseCursor.id = UUID;
 
     root.appendChild(document.createElement('slot'));
 
@@ -435,38 +450,154 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.acquireCursor(this.#mouseCursor);
     document.addEventListener('mousemove', this.#onMouseMove);
     window.addEventListener('beforeunload', this.#onBeforeUnload);
   }
 
+  protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has('src')) {
+      this.#initializeDocument();
+    }
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.releaseCursor(this.#mouseCursor);
+    this.#cleanup();
+    this.#onBeforeUnload();
     document.removeEventListener('mousemove', this.#onMouseMove);
     window.removeEventListener('beforeunload', this.#onBeforeUnload);
   }
 
-  acquireCursor(_cursor: MouseCursor): void {
-    this.#isCursorClaimed = true;
-    this.#mouseCursor.action = 'pointing';
-    this.#mouseCursor.x = this.#cursorPosition.x;
-    this.#mouseCursor.y = this.#cursorPosition.y;
-    this.appendChild(this.#mouseCursor);
+  acquireCursor(cursor: MouseCursor): void {
+    // when the park acquires the cursor of the current tab bind the current mouse position
+    if (cursor.self) {
+      this.#isCursorClaimed = true;
+      cursor.x = this.#cursorPosition.x;
+      cursor.y = this.#cursorPosition.y;
+    }
+
+    cursor.action = 'pointing';
+    this.appendChild(cursor);
   }
 
   releaseCursor(_cursor: MouseCursor): void {
     this.#isCursorClaimed = false;
   }
 
-  #onBeforeUnload = () => this.#mouseCursor.remove();
+  async #initializeDocument() {
+    // Creating the document is async so it could cause unnecessary initialization of the document
+    if (this.src === this.#handle?.url) return;
+
+    this.#cleanup();
+
+    if (this.src && isValidAutomergeUrl(this.src)) {
+      try {
+        this.#handle = await this.#repo.find<CursorDoc>(this.src);
+        await this.#handle.whenReady();
+        const doc = this.#handle.doc();
+
+        // Create cursors that already exist
+        for (const id of Object.keys(doc.cursors)) {
+          const data = doc.cursors[id];
+          const cursor = document.createElement('mouse-cursor');
+          cursor.id = id as string;
+          cursor.action = data.action;
+          cursor.color = data.color;
+          cursor.rotation = data.rotation;
+          cursor.x = data.x;
+          cursor.y = data.y;
+          this.#cursors.set(id as string, cursor);
+          this.acquireCursor(cursor);
+        }
+      } catch (error) {
+        console.error('Failed to find document:', error);
+      }
+    }
+
+    if (this.#handle === null) {
+      try {
+        this.#handle = this.#repo.create<CursorDoc>({ cursors: {} });
+        await this.#handle.whenReady();
+        this.src = this.#handle.url;
+      } catch (error) {
+        console.error('Failed to create document:', error);
+        return;
+      }
+    }
+    if (!this.#handle) return;
+    this.#handle.on('change', this.#onChange);
+
+    // Create the cursor for this tab
+    this.#handle.change((doc) => {
+      doc.cursors[UUID] = {
+        action: 'pointing',
+        color: CURSOR_COLOR,
+        rotation: 0,
+        x: this.#cursorPosition.x,
+        y: this.#cursorPosition.y,
+        parent: findCssSelector(this),
+      };
+    });
+  }
+
+  #onChange = ({ patches }: DocHandleChangePayload<CursorDoc>) => {
+    console.log(patches);
+    for (const patch of patches) {
+      if (patch.action === 'put') {
+        const [_, id, key] = patch.path;
+
+        // Create Cursor
+        if (key === undefined) {
+          console.log('create cursor', id);
+          const cursor = document.createElement('mouse-cursor');
+          cursor.id = id as string;
+          this.#cursors.set(id as string, cursor);
+          this.acquireCursor(cursor);
+        } else {
+          const cursor = this.#cursors.get(id as string);
+          // ignore changes to id property.
+          if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y')) {
+            cursor[key] = patch.value as never;
+          }
+        }
+      } else if (patch.action === 'splice') {
+        const [_, id, key, _index] = patch.path;
+
+        const cursor = this.#cursors.get(id as string);
+        // ignore changes to id property.
+        if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y')) {
+          cursor[key] = patch.value as never;
+        }
+      } else if (patch.action === 'del') {
+        const [_, id] = patch.path;
+        const cursor = this.#cursors.get(id as string);
+        cursor?.remove();
+        this.#cursors.delete(id as string);
+      }
+    }
+  };
+
+  #cleanup() {
+    this.#handle?.removeAllListeners();
+  }
+
+  #onBeforeUnload = () => {
+    console.log('cleanup');
+    this.#handle?.change((doc) => {
+      delete doc.cursors[UUID];
+    });
+  };
 
   // always track the cursor position
   // is the part doesn't have ownership then store it for future use.
   #onMouseMove = (event: MouseEvent) => {
-    if (this.#isCursorClaimed) {
-      this.#mouseCursor.x = event.pageX;
-      this.#mouseCursor.y = event.pageY;
+    if (this.#isCursorClaimed && this.#handle) {
+      this.#handle.change((doc) => {
+        doc.cursors[UUID].x = event.pageX;
+        doc.cursors[UUID].y = event.pageY;
+      });
+      // this.#mouseCursor.x = event.pageX;
+      // this.#mouseCursor.y = event.pageY;
     } else {
       this.#cursorPosition.x = event.pageX;
       this.#cursorPosition.y = event.pageY;
