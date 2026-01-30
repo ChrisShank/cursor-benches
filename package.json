@@ -10,10 +10,11 @@
   },
   "devDependencies": {
     "typescript": "~5.9.3",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vite-plugin-mkcert": "^1.17.9"
   },
   "dependencies": {
-    "@folkjs/dom": "0.0.10",
-    "@folkjs/collab": "0.0.10"
+    "@folkjs/collab": "0.0.10",
+    "@folkjs/dom": "0.0.10"
   }
 }

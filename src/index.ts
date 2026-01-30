@@ -19,7 +19,9 @@ interface CursorObject {
 
 /* CONSTANTS */
 const COLORS = ['#447F59', '#A10314', '#FB546E', '#8750C9', '#E601B2', '#2962C5'];
+const SCALES = [1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9];
 const CURSOR_COLOR = COLORS[Math.floor(Math.random() * COLORS.length)];
+const CURSOR_SCALE = SCALES[Math.floor(Math.random() * SCALES.length)];
 const UUID = crypto.randomUUID();
 
 /* UTILITIES */
@@ -107,10 +109,10 @@ const globalStyles = new CSSStyleSheet();
 
 globalStyles.replaceSync(`
   body {
-    cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR))}, auto;
+    cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR, CURSOR_SCALE))}, auto;
 
     &:has(cursor-bench > mouse-cursor:state(self)) {
-      cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51'))}, auto;
+      cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51', CURSOR_SCALE))}, auto;
     }
   }
 `);
@@ -148,6 +150,8 @@ export class MouseCursor extends ReactiveElement {
   @property({ type: Number, reflect: true }) y = 0;
 
   @property({ type: Number, reflect: true }) rotation = 0;
+
+  @property({ type: Number, reflect: true }) scale = 1.75;
 
   @property({ type: String, reflect: true }) color = 'black';
 
@@ -187,7 +191,7 @@ export class MouseCursor extends ReactiveElement {
       this.style.rotate = this.rotation + 'deg';
     }
 
-    if (changedProperties.has('action')) {
+    if (changedProperties.has('action') || changedProperties.has('scale') || changedProperties.has('color')) {
       const previousAction = changedProperties.get('action');
       if (previousAction) {
         this.#internals.states.delete(previousAction);
@@ -197,7 +201,7 @@ export class MouseCursor extends ReactiveElement {
 
       const actionSprite = MouseCursor.actions.get(this.action) || pointingCursor;
 
-      this.#img.src = inlineSVG(actionSprite(this.color));
+      this.#img.src = inlineSVG(actionSprite(this.color, this.scale));
     }
   }
 }
@@ -412,6 +416,7 @@ interface CursorItem {
   rotation: number;
   x: number;
   y: number;
+  scale: number;
   parent: string;
 }
 
@@ -535,6 +540,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
         rotation: 0,
         x: this.#cursorPosition.x,
         y: this.#cursorPosition.y,
+        scale: CURSOR_SCALE,
         parent: findCssSelector(this),
       };
     });
@@ -556,7 +562,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
         } else {
           const cursor = this.#cursors.get(id as string);
           // ignore changes to id property.
-          if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y')) {
+          if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale')) {
             cursor[key] = patch.value as never;
           }
         }
@@ -565,7 +571,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
         const cursor = this.#cursors.get(id as string);
         // ignore changes to id property.
-        if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y')) {
+        if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale')) {
           cursor[key] = patch.value as never;
         }
       } else if (patch.action === 'del') {

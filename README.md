@@ -22,6 +22,8 @@ Cursors, both text and mouse alike, were [originally conceived](https://www.supe
 
 This project reimagines our relationship to the mouse cursor.
 
+https://youtu.be/C25g53PC5QQ?si=iAM2WVop6RmokwJR&t=346
+
 # How does it work?
 
 Think of cursor parks as an extensible, multiplayer game engine built on top of HTML. The goal is to make cursor parks:
