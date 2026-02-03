@@ -16,26 +16,28 @@
 
       cursor-park > cursor-bench {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        translate: -50% -50%;
-      }
-
-      cursor-park > cursor-slide {
-        position: absolute;
-        top: 75%;
-        left: 75%;
-        translate: -50% -50%;
+        top: 300px;
+        left: 300px;
       }
 
       article cursor-bench {
         display: inline-block;
         vertical-align: middle;
       }
+
+      mouse-cursor:not(:state(self)) {
+        opacity: 0;
+        transition: opacity 1s ease-out;
+      }
+
+      cursor-park:has(cursor-bench > mouse-cursor:state(self)) mouse-cursor:not(:state(self)),
+      cursor-bench > mouse-cursor:not(:state(self)) {
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
-    <cursor-park src="automerge:4ZFZDbthEftaHhyirXyGQ8NRAaxM">
+    <cursor-park src="automerge:2Umqz1HUed6qQp53MujF34VUeVRf">
       <cursor-bench></cursor-bench>
 
       <article>Cursor Benches can be inlined with text too<cursor-bench></cursor-bench>.</article>

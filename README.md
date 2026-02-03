@@ -18,11 +18,25 @@ To add a cursor park just need to import the `cursor-park` library that defines 
 
 # Background
 
-Cursors, both text and mouse alike, were [originally conceived](https://www.superkids.com/aweb/pages/features/mouse/mouse.html) as extensions of our bodies, tiny projections that we directly control as we navigate through and interact with cyberspace. Over time, our relationship to them evolved beyond extension and towards embodiment. Mouse cursors began contextualizing the actions we can take, sometimes as little hands, sometimes warning us when we can't interact with something. Furthermore, as we more frequently co-habituate software in realtime, cursors have become the defacto means to indicate our presence to others – they have come to directly signify ourselves to our peers. Yet something feels off, our presence as embodied through cursors are ghosts, inert, inexpressive, and, at times, [overwhelming](https://maggieappleton.com/ambient-copresence). Worst of all, our cursors (and thus ourselves) live under [constant surveillance](https://www.semanticscholar.org/paper/What-can-a-mouse-cursor-tell-us-more%3A-correlation-Chen-Anderson/4b0771ee0a3417aae94643fcaaabfd922367f8f5), trying to infer our intentions, thoughts, and emotions.
+The [conception](https://www.superkids.com/aweb/pages/features/mouse/mouse.html) of the computer mouse unequivocally changed our relationship to the computer. The movements of our hands became directly translated into cyberspace through tiny digital projections called mouse cursors. Over time, our relationship with mouse cursors evolved beyond extension, towards embodiment. As we have come to frequently co-habituate software in realtime, cursors have become the defacto means to indicate our presence to others – they have come to directly signify ourselves to our peers. Yet something feels off, our presence as embodied through cursors are ghosts, inert, inexpressive, and, at times, [overwhelming](https://maggieappleton.com/ambient-copresence). Worst of all, our cursors (and thus ourselves) live under [constant surveillance](https://www.semanticscholar.org/paper/What-can-a-mouse-cursor-tell-us-more%3A-correlation-Chen-Anderson/4b0771ee0a3417aae94643fcaaabfd922367f8f5), trying to infer our intentions, thoughts, and emotions.
 
 This project reimagines our relationship to the mouse cursor.
 
-https://youtu.be/C25g53PC5QQ?si=iAM2WVop6RmokwJR&t=346
+Mouse cursors began contextualizing the actions we can take, sometimes as little hands, sometimes warning us when we can't interact with something.
+
+[AI browsers](https://www.youtube.com/live/8UWKxJbjriY?t=850s) aims to [take control of our cursors](https://youtu.be/C25g53PC5QQ?si=iAM2WVop6RmokwJR&t=346)
+
+[the double life of cursor watching](https://www.codame.com/p/cursor-watching)
+
+https://reallifemag.com/bad-metaphors-close-to-the-metal/
+
+https://doi.org/10.1080/14680777.2017.1298143
+
+[Cursor Parks](https://knowyourmeme.com/memes/cursor-park)
+
+[sit next to me](https://x.com/blapchat/status/1728101170537984406)
+
+"just a click away" became a marketing scheme
 
 # How does it work?
 

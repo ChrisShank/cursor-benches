@@ -34,6 +34,14 @@ const inlineSVG = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent
 
 const convertSVGIntoCssURL = (svg: string) => `url('${inlineSVG(svg)}')`;
 
+export class AcquireCursorEvent extends Event {
+  static eventType = 'acquire-cursor';
+
+  constructor() {
+    super(AcquireCursorEvent.eventType, { bubbles: true });
+  }
+}
+
 export interface CursorKeyFrame {
   percentage: number;
   x?: number;
@@ -227,7 +235,8 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
     ::slotted(mouse-cursor) {
       display: block;
-      top: -4px !important;
+      top: 50% !important;
+      translate: 0 -50%;
     }
   `;
 
@@ -248,17 +257,24 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     return root;
   }
 
-  acquireCursor(cursor: MouseCursor): void {
+  acquireCursor(cursor: MouseCursor, x = 0): void {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
-    this.#cursor.action = 'sitting';
-    this.#cursor.x = 0;
-    this.#cursor.y = 0;
+    // this.#cursor.action = 'sitting';
+    // this.#cursor.x = 0;
+    // this.#cursor.y = 0;
     this.appendChild(this.#cursor);
     this.removeEventListener('click', this.#onAcquireClick);
     document.addEventListener('click', this.#onReleaseClick, { capture: true });
     document.addEventListener('keydown', this.#onKeydown);
     document.addEventListener('keyup', this.#onKeyup);
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'sitting',
+      x,
+      y: 0,
+      parent: findCssSelector(this),
+    });
+    // this.dispatchEvent(new AcquireCursorEvent());
   }
 
   releaseCursor(_cursor: MouseCursor): void {
@@ -280,9 +296,10 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     event.stopImmediatePropagation();
 
     if (event.target === this) {
+      const cursor = this.#cursor;
       this.releaseCursor(this.#cursor);
       // give control back to the park
-      this.#park?.acquireCursor(this.#cursor);
+      this.#park?.acquireCursor(cursor);
     }
   };
 
@@ -294,9 +311,10 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
 
     if (cursor) {
-      this.acquireCursor(cursor);
       const rect = this.getBoundingClientRect();
-      cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
+      const x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
+      this.acquireCursor(cursor, x);
+      // cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
     }
   };
 
@@ -311,10 +329,16 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       this.#animateCursor(2);
     } else if (event.code === 'ArrowUp') {
       event.preventDefault();
-      this.#cursor.action = 'sitting-forwards';
+      // this.#cursor.action = 'sitting-forwards';
+      this.closest('cursor-park')?.updateSelfCursor({
+        action: 'sitting-forwards',
+      });
     } else if (event.code === 'ArrowDown') {
       event.preventDefault();
-      this.#cursor.action = 'sitting-backwards';
+      // this.#cursor.action = 'sitting-backwards';
+      this.closest('cursor-park')?.updateSelfCursor({
+        action: 'sitting-backwards',
+      });
     }
   };
 
@@ -322,7 +346,10 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     if (this.#cursor === null) return;
 
     if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-      this.#cursor.action = 'sitting';
+      // this.#cursor.action = 'sitting';
+      this.closest('cursor-park')?.updateSelfCursor({
+        action: 'sitting',
+      });
     }
   };
 
@@ -335,16 +362,20 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     const x = previousX + delta;
     const direction = Math.sign(delta);
 
-    this.#animation = new CursorAnimation(this.#cursor, 250, [
-      { percentage: 0, x: previousX, rotation: 0 },
-      { percentage: 33, x: previousX, rotation: direction * 10 },
-      { percentage: 66, x, rotation: direction * -7 },
-      { percentage: 100, x, rotation: 0 },
-    ]);
+    this.closest('cursor-park')?.updateSelfCursor({
+      x,
+    });
 
-    this.#animation.start();
+    // this.#animation = new CursorAnimation(this.#cursor, 250, [
+    //   { percentage: 0, x: previousX, rotation: 0 },
+    //   { percentage: 33, x: previousX, rotation: direction * 10 },
+    //   { percentage: 66, x, rotation: direction * -7 },
+    //   { percentage: 100, x, rotation: 0 },
+    // ]);
 
-    this.#animation.finished.then(() => (this.#animation = null));
+    // this.#animation.start();
+
+    // this.#animation.finished.then(() => (this.#animation = null));
   }
 }
 
@@ -454,6 +485,11 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
     root.appendChild(document.createElement('slot'));
 
+    this.addEventListener(AcquireCursorEvent.eventType, (e) => {
+      console.log('acquire', e.target);
+      this.#updateSelfCursorParent(e.target as HTMLElement);
+    });
+
     return root;
   }
 
@@ -481,11 +517,18 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     // when the park acquires the cursor of the current tab bind the current mouse position
     if (cursor.self) {
       this.#isCursorClaimed = true;
-      cursor.x = this.#cursorPosition.x;
-      cursor.y = this.#cursorPosition.y;
+      // cursor.x = this.#cursorPosition.x;
+      // cursor.y = this.#cursorPosition.y;
+      // cursor.action = 'pointing';
+      this.#updateSelfCursorParent(this);
+      this.updateSelfCursor({
+        x: this.#cursorPosition.x,
+        y: this.#cursorPosition.y,
+        action: 'pointing',
+        parent: findCssSelector(this),
+      });
     }
 
-    cursor.action = 'pointing';
     this.appendChild(cursor);
   }
 
@@ -493,11 +536,20 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     this.#isCursorClaimed = false;
   }
 
+  #updateSelfCursorParent(el: HTMLElement) {
+    this.#handle?.change((doc) => {
+      console.log(findCssSelector(el));
+      doc.cursors[UUID].parent = findCssSelector(el);
+    });
+  }
+
   async #initializeDocument() {
     // Creating the document is async so it could cause unnecessary initialization of the document
     if (this.src === this.#handle?.url) return;
 
     this.#cleanup();
+
+    console.log('init');
 
     if (this.src && isValidAutomergeUrl(this.src)) {
       try {
@@ -534,6 +586,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
       }
     }
     if (!this.#handle) return;
+
     this.#handle.on('change', this.#onChange);
 
     // Create the cursor for this tab
@@ -551,6 +604,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
   }
 
   #onChange = ({ doc, patches }: DocHandleChangePayload<CursorDoc>) => {
+    console.log(patches);
     for (const patch of patches) {
       if (patch.action === 'put') {
         const [_, id, key] = patch.path;
@@ -560,6 +614,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
           const cursor = document.createElement('mouse-cursor');
           cursor.id = id as string;
           this.#cursors.set(id as string, cursor);
+
           this.#perfectCursors.set(
             id as string,
             new PerfectCursor(([x, y]) => {
@@ -567,14 +622,22 @@ export class CursorPark extends ReactiveElement implements CursorObject {
               cursor.y = y;
             }),
           );
+
           this.acquireCursor(cursor);
         } else {
           const cursor = this.#cursors.get(id as string);
 
           if (cursor === undefined) return;
 
-          if ((key === 'x' || key === 'y') && !cursor.self && cursor.action === 'pointing') {
-            const data = doc.cursors[id];
+          const data = doc.cursors[id];
+
+          if (key === 'parent' && typeof patch.value === 'string' && patch.value !== '') {
+            const newParent = document.querySelector(patch.value);
+            console.log(newParent);
+            // if (newParent && newParent !== cursor.parentElement) {
+            //   newParent.appendChild(cursor);
+            // }
+          } else if ((key === 'x' || key === 'y') && !cursor.self && data.action === 'pointing') {
             this.#perfectCursors.get(id as string)?.addPoint([data.x, data.y]);
           } else if (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale') {
             cursor[key] = patch.value as never;
@@ -584,9 +647,17 @@ export class CursorPark extends ReactiveElement implements CursorObject {
         const [_, id, key, _index] = patch.path;
 
         const cursor = this.#cursors.get(id as string);
+
+        if (cursor === undefined) return;
         // ignore changes to id property.
-        if (cursor && (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale')) {
+        if (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale') {
           cursor[key] = patch.value as never;
+        } else if (key === 'parent' && typeof patch.value === 'string' && patch.value !== '') {
+          const newParent = document.querySelector(patch.value);
+          console.log(newParent);
+          if (newParent && newParent !== cursor.parentElement) {
+            newParent.appendChild(cursor);
+          }
         }
       } else if (patch.action === 'del') {
         const [_, id] = patch.path;
@@ -604,6 +675,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
   }
 
   #onBeforeUnload = () => {
+    console.log('unload');
     this.#handle?.change((doc) => {
       delete doc.cursors[UUID];
     });
@@ -624,6 +696,22 @@ export class CursorPark extends ReactiveElement implements CursorObject {
       this.#cursorPosition.y = event.pageY;
     }
   };
+
+  updateSelfCursor({ x, y, action, color, rotation, scale, parent }: Partial<CursorItem>) {
+    const cursor = this.#cursors.get(UUID);
+    if (cursor === undefined) return;
+    console.log({ x, y, action, color, rotation, scale, parent });
+    this.#handle?.change((doc) => {
+      const cursorData = doc.cursors[UUID];
+      if (x !== undefined) cursorData.x = x;
+      if (y !== undefined) cursorData.y = y;
+      if (action !== undefined) cursorData.action = action;
+      if (color !== undefined) cursorData.color = color;
+      if (rotation !== undefined) cursorData.rotation = rotation;
+      if (scale !== undefined) cursorData.scale = scale;
+      if (parent !== undefined) cursorData.parent = parent;
+    });
+  }
 }
 
 declare global {
