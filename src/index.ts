@@ -397,6 +397,11 @@ export class CursorMat extends ReactiveElement implements CursorObject {
       width: 100%;
       transform: rotate3d(1, 0.5, -1, 90deg);
     }
+
+    ::slotted(mouse-cursor) {
+      display: block;
+      translate: 0 -50%;
+    }
   `;
 
   #mat = document.createElement('div');
