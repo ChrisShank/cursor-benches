@@ -360,7 +360,7 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
     const previousX = this.#cursor.x;
     const x = previousX + delta;
-    const direction = Math.sign(delta);
+    // const direction = Math.sign(delta);
 
     this.closest('cursor-park')?.updateSelfCursor({
       x,
@@ -425,7 +425,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     }
   `;
 
-  #cursor: MouseCursor | null = null;
+  // #cursor: MouseCursor | null = null;
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
