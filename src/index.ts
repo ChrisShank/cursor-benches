@@ -485,10 +485,10 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
     root.appendChild(document.createElement('slot'));
 
-    this.addEventListener(AcquireCursorEvent.eventType, (e) => {
-      console.log('acquire', e.target);
-      this.#updateSelfCursorParent(e.target as HTMLElement);
-    });
+    // this.addEventListener(AcquireCursorEvent.eventType, (e) => {
+    //   console.log('acquire', e.target);
+    //   this.#updateSelfCursorParent(e.target as HTMLElement);
+    // });
 
     return root;
   }
@@ -520,7 +520,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
       // cursor.x = this.#cursorPosition.x;
       // cursor.y = this.#cursorPosition.y;
       // cursor.action = 'pointing';
-      this.#updateSelfCursorParent(this);
+      // this.#updateSelfCursorParent(this);
       this.updateSelfCursor({
         x: this.#cursorPosition.x,
         y: this.#cursorPosition.y,
@@ -536,12 +536,12 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     this.#isCursorClaimed = false;
   }
 
-  #updateSelfCursorParent(el: HTMLElement) {
-    this.#handle?.change((doc) => {
-      console.log(findCssSelector(el));
-      doc.cursors[UUID].parent = findCssSelector(el);
-    });
-  }
+  // #updateSelfCursorParent(el: HTMLElement) {
+  //   this.#handle?.change((doc) => {
+  //     console.log(findCssSelector(el));
+  //     doc.cursors[UUID].parent = findCssSelector(el);
+  //   });
+  // }
 
   async #initializeDocument() {
     // Creating the document is async so it could cause unnecessary initialization of the document
@@ -549,7 +549,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
     this.#cleanup();
 
-    console.log('init');
+    console.log('init doc');
 
     if (this.src && isValidAutomergeUrl(this.src)) {
       try {
@@ -568,7 +568,10 @@ export class CursorPark extends ReactiveElement implements CursorObject {
           cursor.x = data.x;
           cursor.y = data.y;
           this.#cursors.set(id as string, cursor);
-          this.acquireCursor(cursor);
+          const newParent = document.querySelector(data.parent);
+          if (newParent) {
+            newParent.appendChild(cursor);
+          }
         }
       } catch (error) {
         console.error('Failed to find document:', error);
@@ -655,7 +658,6 @@ export class CursorPark extends ReactiveElement implements CursorObject {
           cursor[key] = patch.value as never;
         } else if (key === 'parent' && typeof patch.value === 'string' && patch.value !== '') {
           const newParent = document.querySelector(patch.value);
-          console.log(newParent);
           if (newParent && newParent !== cursor.parentElement) {
             newParent.appendChild(cursor);
           }
@@ -700,7 +702,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
   updateSelfCursor({ x, y, action, color, rotation, scale, parent }: Partial<CursorItem>) {
     const cursor = this.#cursors.get(UUID);
     if (cursor === undefined) return;
-    console.log({ x, y, action, color, rotation, scale, parent });
+
     this.#handle?.change((doc) => {
       const cursorData = doc.cursors[UUID];
       if (parent !== undefined) cursorData.parent = parent;
