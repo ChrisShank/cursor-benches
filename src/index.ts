@@ -424,8 +424,8 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     const rect = this.getBoundingClientRect();
     this.closest('cursor-park')?.updateSelfCursor({
       action: 'crouching',
-      x: x - rect.x - 10,
-      y: y - rect.y - 30,
+      x: x - rect.x,
+      y: y - rect.y,
       parent: findCssSelector(this),
     });
   }
