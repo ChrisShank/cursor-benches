@@ -425,7 +425,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     }
   `;
 
-  // #cursor: MouseCursor | null = null;
+  #cursor: MouseCursor | null = null;
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
@@ -618,8 +618,11 @@ export class CursorPark extends ReactiveElement implements CursorObject {
           this.#perfectCursors.set(
             id as string,
             new PerfectCursor(([x, y]) => {
-              cursor.x = x;
-              cursor.y = y;
+              // only update the cursor if it's pointing
+              if (cursor.action === 'pointing') {
+                cursor.x = x;
+                cursor.y = y;
+              }
             }),
           );
 
@@ -630,13 +633,11 @@ export class CursorPark extends ReactiveElement implements CursorObject {
           if (cursor === undefined) return;
 
           const data = doc.cursors[id];
-
           if (key === 'parent' && typeof patch.value === 'string' && patch.value !== '') {
             const newParent = document.querySelector(patch.value);
-            console.log(newParent);
-            // if (newParent && newParent !== cursor.parentElement) {
-            //   newParent.appendChild(cursor);
-            // }
+            if (newParent && newParent !== cursor.parentElement) {
+              newParent.appendChild(cursor);
+            }
           } else if ((key === 'x' || key === 'y') && !cursor.self && data.action === 'pointing') {
             this.#perfectCursors.get(id as string)?.addPoint([data.x, data.y]);
           } else if (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale') {
@@ -691,10 +692,9 @@ export class CursorPark extends ReactiveElement implements CursorObject {
       });
       // this.#mouseCursor.x = event.pageX;
       // this.#mouseCursor.y = event.pageY;
-    } else {
-      this.#cursorPosition.x = event.pageX;
-      this.#cursorPosition.y = event.pageY;
     }
+    this.#cursorPosition.x = event.pageX;
+    this.#cursorPosition.y = event.pageY;
   };
 
   updateSelfCursor({ x, y, action, color, rotation, scale, parent }: Partial<CursorItem>) {
@@ -703,13 +703,13 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     console.log({ x, y, action, color, rotation, scale, parent });
     this.#handle?.change((doc) => {
       const cursorData = doc.cursors[UUID];
+      if (parent !== undefined) cursorData.parent = parent;
+      if (action !== undefined) cursorData.action = action;
       if (x !== undefined) cursorData.x = x;
       if (y !== undefined) cursorData.y = y;
-      if (action !== undefined) cursorData.action = action;
       if (color !== undefined) cursorData.color = color;
       if (rotation !== undefined) cursorData.rotation = rotation;
       if (scale !== undefined) cursorData.scale = scale;
-      if (parent !== undefined) cursorData.parent = parent;
     });
   }
 }
