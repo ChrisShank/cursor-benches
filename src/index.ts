@@ -379,69 +379,90 @@ export class CursorBench extends ReactiveElement implements CursorObject {
   }
 }
 
-export class CursorSlide extends ReactiveElement implements CursorObject {
-  static tagName = 'cursor-slide';
+export class CursorMat extends ReactiveElement implements CursorObject {
+  static tagName = 'cursor-mat';
 
   static styles = css`
     :host {
-      width: 44px;
-      aspect-ratio: 1.189;
       display: block;
+      position: relative;
+      aspect-ratio: 1;
+      width: 50px;
+      user-select: none;
     }
 
-    svg {
-      width: 100%;
+    div {
+      background-color: tan;
       height: 100%;
+      width: 100%;
+      transform: rotate3d(1, 0.5, -1, 90deg);
     }
   `;
 
-  // #cursor: MouseCursor | null = null;
+  #mat = document.createElement('div');
+  #cursor: MouseCursor | null = null;
+
+  get #park() {
+    return this.closest('cursor-park');
+  }
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
+    root.append(this.#mat, document.createElement('slot'));
 
-    (root as ShadowRoot).setHTMLUnsafe(`<svg viewBox="0 0 44 37" fill="none" xmlns="http://www.w3.org/2000/svg">
-<line x1="4.62474" y1="33" x2="4.62474" y2="1" stroke="black" stroke-width="2" stroke-linecap="square"/>
-<path d="M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z" fill="black"/>
-</svg>
-<slot></slot>`);
+    this.#mat.addEventListener('click', this.#onAcquireClick);
 
     return root;
   }
 
-  acquireCursor(_cursor: MouseCursor): void {}
-
-  releaseCursor(_cursor: MouseCursor): void {}
-}
-
-export class CursorSign extends ReactiveElement implements CursorObject {
-  static tagName = 'cursor-sign';
-
-  static styles = css`
-    :host {
-      width: 44px;
-      aspect-ratio: 1.189;
-      display: block;
-    }
-  `;
-
-  // #cursor: MouseCursor | null = null;
-
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
-    const root = super.createRenderRoot();
-
-    (root as ShadowRoot).setHTMLUnsafe(`<svg viewBox="0 0 44 37" fill="none" xmlns="http://www.w3.org/2000/svg">
-<line x1="4.62474" y1="33" x2="4.62474" y2="1" stroke="black" stroke-width="2" stroke-linecap="square"/>
-<path d="M41.1529 33.8656C41.7049 33.8501 42.1399 33.3899 42.1243 32.8379C42.1088 32.2858 41.6486 31.8509 41.0966 31.8664L41.1247 32.866L41.1529 33.8656ZM4.62472 3.54399e-05L3.62472 3.51419e-05L3.62472 2.00004L4.62472 2.00003L4.62472 1.00003L4.62472 3.54399e-05ZM41.1247 32.866L41.0966 31.8664C30.4412 32.1667 24.2117 24.6688 19.2241 16.6429C16.787 12.7212 14.5813 8.54906 12.4089 5.48932C10.2511 2.45019 7.79811 3.36625e-05 4.62472 3.54399e-05L4.62472 1.00003L4.62472 2.00003C6.70137 2.00003 8.62341 3.61237 10.7781 6.64717C12.9182 9.66136 14.9625 13.5746 17.5254 17.6986C22.5378 25.7643 29.3083 34.1994 41.1529 33.8656L41.1247 32.866Z" fill="black"/>
-</svg>
-<slot></slot>`);
-
-    return root;
+  acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
+    this.#cursor = cursor;
+    (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
+    this.appendChild(this.#cursor);
+    this.#mat.removeEventListener('click', this.#onAcquireClick);
+    document.addEventListener('click', this.#onReleaseClick, { capture: true });
+    const rect = this.getBoundingClientRect();
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'crouching',
+      x: x - rect.x - 10,
+      y: y - rect.y - 30,
+      parent: findCssSelector(this),
+    });
   }
 
-  acquireCursor(_cursor: MouseCursor): void {}
+  releaseCursor(_cursor: MouseCursor): void {
+    this.#cursor = null;
+    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
+    this.#mat.addEventListener('click', this.#onAcquireClick);
+  }
 
-  releaseCursor(_cursor: MouseCursor): void {}
+  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
+  #onReleaseClick = (event: PointerEvent) => {
+    if (this.#cursor === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (event.target === this) {
+      const cursor = this.#cursor;
+      this.releaseCursor(this.#cursor);
+      // give control back to the park
+      this.#park?.acquireCursor(cursor);
+    }
+  };
+
+  #onAcquireClick = (event: PointerEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+    if (cursor) {
+      this.acquireCursor(cursor, event.pageX, event.pageY);
+    }
+  };
 }
 
 interface CursorItem {
@@ -720,12 +741,12 @@ declare global {
   interface HTMLElementTagNameMap {
     'mouse-cursor': MouseCursor;
     'cursor-bench': CursorBench;
-    'cursor-slide': CursorSlide;
+    'cursor-mat': CursorMat;
     'cursor-park': CursorPark;
   }
 }
 
 MouseCursor.define();
 CursorBench.define();
-CursorSlide.define();
+CursorMat.define();
 CursorPark.define();
