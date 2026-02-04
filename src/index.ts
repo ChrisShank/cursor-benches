@@ -1,5 +1,5 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
-import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
+import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import {
   pointingCursor,
