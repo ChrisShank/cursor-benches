@@ -1,5 +1,5 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
-import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom/ReactiveElement';
+import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import {
   pointingCursor,
@@ -122,7 +122,7 @@ globalStyles.replaceSync(`
   body {
     cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR, CURSOR_SCALE))}, auto;
 
-    &:has(cursor-bench > mouse-cursor:state(self)) {
+    &:not(:has(cursor-park > mouse-cursor:state(self))) {
       cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51', CURSOR_SCALE))}, auto;
     }
   }
@@ -143,6 +143,10 @@ export class MouseCursor extends ReactiveElement {
       pointer-events: none;
       user-select: none;
       z-index: calc(Infinity);
+    }
+
+    img {
+      display: block;
     }
   `;
 
@@ -234,7 +238,6 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     }
 
     ::slotted(mouse-cursor) {
-      display: block;
       top: 50% !important;
       translate: 0 -50%;
     }
@@ -392,6 +395,7 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     }
 
     div {
+      display: block;
       background-color: tan;
       height: 100%;
       width: 100%;
@@ -399,13 +403,12 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     }
 
     ::slotted(mouse-cursor) {
-      display: block;
-      translate: 0 -50%;
+      translate: -100% -50%;
     }
   `;
 
-  #mat = document.createElement('div');
   #cursor: MouseCursor | null = null;
+  #mat = document.createElement('div');
 
   get #park() {
     return this.closest('cursor-park');
@@ -424,9 +427,12 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
     this.appendChild(this.#cursor);
+
     this.#mat.removeEventListener('click', this.#onAcquireClick);
     document.addEventListener('click', this.#onReleaseClick, { capture: true });
-    const rect = this.getBoundingClientRect();
+
+    const rect = this.#mat.getBoundingClientRect();
+
     this.closest('cursor-park')?.updateSelfCursor({
       action: 'crouching',
       x: x - rect.x,
