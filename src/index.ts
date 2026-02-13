@@ -9,6 +9,7 @@ import {
   standingCursor,
   slidingCursor,
   crouching,
+  parkSign,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -477,6 +478,46 @@ export class CursorMat extends ReactiveElement implements CursorObject {
   };
 }
 
+export class CursorSign extends ReactiveElement {
+  static tagName = 'cursor-sign';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      /* 26 x 53 */
+      aspect-ratio: 0.49;
+      height: 140px;
+      user-select: none;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+  `;
+
+  @property({ type: String, reflect: true }) text = '';
+
+  #img = document.createElement('img');
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    root.appendChild(document.createElement('slot'));
+    root.append(this.#img);
+
+    return root;
+  }
+
+  protected update(changedProperties: PropertyValues<this>): void {
+    super.update(changedProperties);
+
+    if (changedProperties.has('text')) {
+      this.#img.src = inlineSVG(parkSign(this.text));
+    }
+  }
+}
+
 interface CursorItem {
   action: string;
   color: string;
@@ -755,6 +796,7 @@ declare global {
     'cursor-bench': CursorBench;
     'cursor-mat': CursorMat;
     'cursor-park': CursorPark;
+    'cursor-sign': CursorSign;
   }
 }
 
@@ -762,3 +804,4 @@ MouseCursor.define();
 CursorBench.define();
 CursorMat.define();
 CursorPark.define();
+CursorSign.define();
