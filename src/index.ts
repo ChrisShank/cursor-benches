@@ -11,6 +11,8 @@ import {
   crouching,
   parkSign,
   parkInfographic,
+  cursorLookingUp,
+  cursorLookingDown,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -161,6 +163,8 @@ export class MouseCursor extends ReactiveElement {
     ['standing', standingCursor],
     ['sliding', slidingCursor],
     ['crouching', crouching],
+    ['looking-up', cursorLookingUp],
+    ['looking-down', cursorLookingDown],
   ]);
 
   @property({ type: Number, reflect: true }) x = 0;
@@ -479,7 +483,7 @@ export class CursorMat extends ReactiveElement implements CursorObject {
   };
 }
 
-export class CursorSign extends ReactiveElement {
+export class CursorSign extends ReactiveElement implements CursorObject {
   static tagName = 'cursor-sign';
 
   static styles = css`
@@ -492,6 +496,24 @@ export class CursorSign extends ReactiveElement {
       user-select: none;
     }
 
+    div {
+      display: block;
+      position: absolute;
+      height: 20%;
+      width: 120%;
+      bottom: 10%;
+      right: 90%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    :host(:hover) div,
+    div:hover {
+      opacity: 1;
+    }
+
     img {
       height: 100%;
       width: 100%;
@@ -499,16 +521,75 @@ export class CursorSign extends ReactiveElement {
   `;
 
   #img = document.createElement('img');
+  #clickZone = document.createElement('div');
+  #cursor: MouseCursor | null = null;
+
+  get #park() {
+    return this.closest('cursor-park');
+  }
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
     this.#img.src = inlineSVG(parkSign());
+    this.#clickZone.addEventListener('click', this.#onAcquireClick);
 
-    root.appendChild(document.createElement('slot'));
-    root.append(this.#img);
+    root.append(document.createElement('slot'), this.#clickZone, this.#img);
 
     return root;
   }
+
+  acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
+    this.#cursor = cursor;
+    (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
+    this.appendChild(this.#cursor);
+
+    this.removeEventListener('click', this.#onAcquireClick);
+    document.addEventListener('click', this.#onReleaseClick, { capture: true });
+
+    const rect = this.getBoundingClientRect();
+
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'looking-up',
+      x: x - rect.x,
+      y: y - rect.y,
+      parent: findCssSelector(this),
+    });
+  }
+
+  releaseCursor(_cursor: MouseCursor): void {
+    this.#cursor = null;
+    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
+    this.#clickZone.addEventListener('click', this.#onAcquireClick);
+  }
+
+  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
+  #onReleaseClick = (event: PointerEvent) => {
+    if (this.#cursor === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (event.target === this) {
+      const cursor = this.#cursor;
+      this.releaseCursor(this.#cursor);
+      // give control back to the park
+      this.#park?.acquireCursor(cursor);
+    }
+  };
+
+  #onAcquireClick = (event: PointerEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+    if (cursor) {
+      this.acquireCursor(cursor, event.pageX, event.pageY);
+    }
+  };
 }
 
 export class CursorInfographic extends ReactiveElement {
@@ -520,7 +601,7 @@ export class CursorInfographic extends ReactiveElement {
       position: relative;
       /* 10 x 12 */
       aspect-ratio: 0.83;
-      height: 60px;
+      height: 30px;
       user-select: none;
     }
 
@@ -536,18 +617,10 @@ export class CursorInfographic extends ReactiveElement {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    root.appendChild(document.createElement('slot'));
-    root.append(this.#img);
+    root.append(document.createElement('slot'), this.#img);
+    this.#img.src = inlineSVG(parkInfographic());
 
     return root;
-  }
-
-  protected update(changedProperties: PropertyValues<this>): void {
-    super.update(changedProperties);
-
-    if (changedProperties.has('text')) {
-      this.#img.src = inlineSVG(parkInfographic());
-    }
   }
 }
 
