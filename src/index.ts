@@ -10,6 +10,7 @@ import {
   slidingCursor,
   crouching,
   parkSign,
+  parkInfographic,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -497,6 +498,38 @@ export class CursorSign extends ReactiveElement {
     }
   `;
 
+  #img = document.createElement('img');
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.#img.src = inlineSVG(parkSign());
+
+    root.appendChild(document.createElement('slot'));
+    root.append(this.#img);
+
+    return root;
+  }
+}
+
+export class CursorInfographic extends ReactiveElement {
+  static tagName = 'cursor-infographic';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      /* 10 x 12 */
+      aspect-ratio: 0.83;
+      height: 60px;
+      user-select: none;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+  `;
+
   @property({ type: String, reflect: true }) text = '';
 
   #img = document.createElement('img');
@@ -513,7 +546,7 @@ export class CursorSign extends ReactiveElement {
     super.update(changedProperties);
 
     if (changedProperties.has('text')) {
-      this.#img.src = inlineSVG(parkSign(this.text));
+      this.#img.src = inlineSVG(parkInfographic());
     }
   }
 }
@@ -797,6 +830,7 @@ declare global {
     'cursor-mat': CursorMat;
     'cursor-park': CursorPark;
     'cursor-sign': CursorSign;
+    'cursor-infographic': CursorInfographic;
   }
 }
 
@@ -805,3 +839,4 @@ CursorBench.define();
 CursorMat.define();
 CursorPark.define();
 CursorSign.define();
+CursorInfographic.define();

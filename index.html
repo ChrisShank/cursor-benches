@@ -26,6 +26,12 @@
         left: 235px;
       }
 
+      cursor-park > cursor-infographic {
+        position: absolute;
+        top: 400px;
+        left: 100px;
+      }
+
       cursor-park > cursor-mat {
         position: absolute;
         top: 600px;
@@ -37,6 +43,7 @@
         vertical-align: middle;
       }
 
+      /* Only display presence when sitting */
       /* mouse-cursor:not(:state(self)) {
         opacity: 0;
         transition: opacity 1s ease-out;
@@ -53,6 +60,7 @@
       <cursor-bench></cursor-bench>
       <cursor-mat></cursor-mat>
       <cursor-sign></cursor-sign>
+      <cursor-infographic></cursor-infographic>
       <article>Cursor Benches can be inlined with text too<cursor-bench></cursor-bench>.</article>
     </cursor-park>
     <script type="module" src="/src/main.ts"></script>
