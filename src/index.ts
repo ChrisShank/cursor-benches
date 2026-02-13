@@ -592,7 +592,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
   };
 }
 
-export class CursorInfographic extends ReactiveElement {
+export class CursorInfographic extends ReactiveElement implements CursorObject {
   static tagName = 'cursor-infographic';
 
   static styles = css`
@@ -605,23 +605,100 @@ export class CursorInfographic extends ReactiveElement {
       user-select: none;
     }
 
+    div {
+      display: block;
+      position: absolute;
+      height: 75%;
+      width: 150%;
+      top: -50%;
+      right: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    :host(:hover) div,
+    div:hover {
+      opacity: 1;
+    }
+
     img {
       height: 100%;
       width: 100%;
     }
   `;
 
-  @property({ type: String, reflect: true }) text = '';
-
   #img = document.createElement('img');
+  #clickZone = document.createElement('div');
+  #cursor: MouseCursor | null = null;
+
+  get #park() {
+    return this.closest('cursor-park');
+  }
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    root.append(document.createElement('slot'), this.#img);
     this.#img.src = inlineSVG(parkInfographic());
+    this.#clickZone.addEventListener('click', this.#onAcquireClick);
+
+    root.append(document.createElement('slot'), this.#clickZone, this.#img);
 
     return root;
   }
+
+  acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
+    this.#cursor = cursor;
+    (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
+    this.appendChild(this.#cursor);
+
+    this.removeEventListener('click', this.#onAcquireClick);
+    document.addEventListener('click', this.#onReleaseClick, { capture: true });
+
+    const rect = this.getBoundingClientRect();
+
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'looking-down',
+      x: x - rect.x,
+      y: y - rect.y,
+      parent: findCssSelector(this),
+    });
+  }
+
+  releaseCursor(_cursor: MouseCursor): void {
+    this.#cursor = null;
+    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
+    this.#clickZone.addEventListener('click', this.#onAcquireClick);
+  }
+
+  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
+  #onReleaseClick = (event: PointerEvent) => {
+    if (this.#cursor === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (event.target === this) {
+      const cursor = this.#cursor;
+      this.releaseCursor(this.#cursor);
+      // give control back to the park
+      this.#park?.acquireCursor(cursor);
+    }
+  };
+
+  #onAcquireClick = (event: PointerEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+    if (cursor) {
+      this.acquireCursor(cursor, event.pageX, event.pageY);
+    }
+  };
 }
 
 interface CursorItem {
