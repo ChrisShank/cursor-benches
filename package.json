@@ -16,6 +16,7 @@
   "dependencies": {
     "@folkjs/collab": "0.0.10",
     "@folkjs/dom": "0.0.10",
-    "perfect-cursors": "^1.0.5"
+    "perfect-cursors": "^1.0.5",
+    "youtube-video-element": "^1.9.0"
   }
 }

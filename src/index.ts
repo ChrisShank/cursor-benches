@@ -14,9 +14,12 @@ import {
   cursorLookingUp,
   cursorLookingDown,
   cursorMat,
+  movieScreen,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
+import 'youtube-video-element';
+import type CustomVideoElement from 'youtube-video-element';
 
 interface CursorObject {
   acquireCursor(cursor: MouseCursor): void;
@@ -408,6 +411,7 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     /* place on tip of cursor */
     ::slotted(mouse-cursor) {
       translate: -25% -75%;
+      transform: rotateY(41deg) rotateX(5deg) rotateZ(-8deg);
     }
   `;
 
@@ -970,6 +974,66 @@ export class CursorPark extends ReactiveElement implements CursorObject {
   }
 }
 
+export class MovieScreen extends ReactiveElement {
+  static tagName = 'movie-screen';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      aspect-ratio: 1.3;
+      width: 300px;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+
+    youtube-video {
+      display: block;
+      position: absolute;
+      top: 50px;
+      left: 30px;
+      width: 200px;
+      transform: rotateY(36deg) rotateZ(-2deg) rotateX(-6deg);
+      opacity: 0.75;
+      aspect-ratio: 1.78;
+      border: unset;
+      pointer-events: none;
+      min-width: unset;
+      min-height: unset;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    youtube-video::after {
+      content: '';
+      display: block;
+      position: absolute;
+      inset: 0;
+      box-shadow: 0px 0px 75px 10px rgba(196, 196, 196, 0.75) inset;
+    }
+  `;
+
+  #img = document.createElement('img');
+  #player = document.createElement('youtube-video') as CustomVideoElement;
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.#player.volume = 0;
+    this.#player.controls = false;
+    this.#player.src = 'https://www.youtube.com/watch?v=WeyLEe1T0yo';
+    this.#player.play();
+    this.#img.src = inlineSVG(movieScreen());
+
+    root.append(this.#img, this.#player);
+
+    return root;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'mouse-cursor': MouseCursor;
@@ -978,6 +1042,7 @@ declare global {
     'cursor-park': CursorPark;
     'cursor-sign': CursorSign;
     'cursor-infographic': CursorInfographic;
+    'movie-screen': MovieScreen;
   }
 }
 
@@ -987,3 +1052,4 @@ CursorMat.define();
 CursorPark.define();
 CursorSign.define();
 CursorInfographic.define();
+MovieScreen.define();
