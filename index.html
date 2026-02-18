@@ -6,62 +6,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>cursor-benches</title>
     <style>
-      html,
-      body,
+      body {
+        margin: 0;
+        background-color: rgb(104 159 48 / 30%);
+      }
+
       cursor-park {
-        height: 100%;
-        margin: 0.33rem;
-        background-color: rgb(188, 209, 228);
-      }
+        height: 2000px;
+        width: 2000px;
 
-      cursor-park > cursor-bench {
-        position: absolute;
-        top: 300px;
-        left: 300px;
-      }
+        > * {
+          position: absolute;
+        }
 
-      cursor-park > cursor-sign {
-        position: absolute;
-        top: 190px;
-        left: 235px;
-      }
+        #welcome-sign {
+          top: 120px;
+          left: 250px;
+        }
 
-      cursor-park > cursor-infographic {
-        position: absolute;
-        top: 400px;
-        left: 100px;
-      }
+        #bench-one {
+          top: 300px;
+          left: 500px;
+        }
 
-      cursor-park > cursor-mat {
-        position: absolute;
-        top: 600px;
-        left: 300px;
-      }
+        #bench-two {
+          top: 300px;
+          left: 580px;
+        }
 
-      article cursor-bench {
-        display: inline-block;
-        vertical-align: middle;
-      }
+        #bench-three {
+          top: 300px;
+          left: 660px;
+        }
 
-      /* Only display presence when sitting */
-      /* mouse-cursor:not(:state(self)) {
-        opacity: 0;
-        transition: opacity 1s ease-out;
-      }
+        #infographic-one {
+          top: 400px;
+          left: 100px;
+        }
 
-      cursor-park:has(cursor-bench > mouse-cursor:state(self)) mouse-cursor:not(:state(self)),
-      cursor-bench > mouse-cursor:not(:state(self)) {
-        opacity: 1;
-      } */
+        cursor-mat {
+          top: 600px;
+          left: 300px;
+        }
+      }
     </style>
   </head>
   <body>
     <cursor-park src="">
-      <cursor-bench></cursor-bench>
+      <cursor-sign id="welcome-sign"></cursor-sign>
+      <cursor-bench id="bench-one"></cursor-bench>
+      <cursor-bench id="bench-two"></cursor-bench>
+      <cursor-bench id="bench-three"></cursor-bench>
       <cursor-mat></cursor-mat>
-      <cursor-sign></cursor-sign>
-      <cursor-infographic></cursor-infographic>
-      <article>Cursor Benches can be inlined with text too<cursor-bench></cursor-bench>.</article>
+      <cursor-infographic id="infographic-one"></cursor-infographic>
     </cursor-park>
     <script type="module" src="/src/main.ts"></script>
   </body>

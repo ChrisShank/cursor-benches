@@ -13,6 +13,7 @@ import {
   parkInfographic,
   cursorLookingUp,
   cursorLookingDown,
+  cursorMat,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -322,7 +323,7 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
     if (cursor) {
       const rect = this.getBoundingClientRect();
-      const x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
+      const x = clamp(0, event.pageX - (rect.x + window.scrollX), this.offsetWidth) - cursor.offsetWidth / 2;
       this.acquireCursor(cursor, x);
       // cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
     }
@@ -396,26 +397,22 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     :host {
       display: block;
       position: relative;
-      aspect-ratio: 1;
-      width: 75px;
       user-select: none;
     }
 
-    div {
+    img {
       display: block;
-      background-color: tan;
-      height: 100%;
-      width: 100%;
-      transform: rotate3d(1, 0.5, -1, 90deg);
+      width: 80px;
     }
 
+    /* place on tip of cursor */
     ::slotted(mouse-cursor) {
-      translate: -100% -50%;
+      translate: -25% -75%;
     }
   `;
 
   #cursor: MouseCursor | null = null;
-  #mat = document.createElement('div');
+  #mat = document.createElement('img');
 
   get #park() {
     return this.closest('cursor-park');
@@ -423,6 +420,7 @@ export class CursorMat extends ReactiveElement implements CursorObject {
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
+    this.#mat.src = inlineSVG(cursorMat());
     root.append(this.#mat, document.createElement('slot'));
 
     this.#mat.addEventListener('click', this.#onAcquireClick);
@@ -439,11 +437,10 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     document.addEventListener('click', this.#onReleaseClick, { capture: true });
 
     const rect = this.#mat.getBoundingClientRect();
-
     this.closest('cursor-park')?.updateSelfCursor({
       action: 'crouching',
-      x: x - rect.x,
-      y: y - rect.y,
+      x: x - (rect.x + window.scrollX),
+      y: y - (rect.y + window.scrollY),
       parent: findCssSelector(this),
     });
   }
@@ -502,7 +499,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
       height: 20%;
       width: 120%;
       bottom: 10%;
-      right: 90%;
+      right: 100%;
       background: rgba(0, 0, 0, 0.15);
       border-radius: 5px;
       opacity: 0;
@@ -551,8 +548,8 @@ export class CursorSign extends ReactiveElement implements CursorObject {
 
     this.closest('cursor-park')?.updateSelfCursor({
       action: 'looking-up',
-      x: x - rect.x,
-      y: y - rect.y,
+      x: x - (rect.x + window.scrollX),
+      y: y - (rect.y + window.scrollY),
       parent: findCssSelector(this),
     });
   }
@@ -601,17 +598,17 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
       position: relative;
       /* 10 x 12 */
       aspect-ratio: 0.83;
-      height: 30px;
+      height: 40px;
       user-select: none;
     }
 
     div {
       display: block;
       position: absolute;
-      height: 75%;
-      width: 150%;
-      top: -50%;
-      right: 100%;
+      height: 50%;
+      width: 120%;
+      top: -20%;
+      right: 110%;
       background: rgba(0, 0, 0, 0.15);
       border-radius: 5px;
       opacity: 0;
@@ -660,8 +657,8 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
 
     this.closest('cursor-park')?.updateSelfCursor({
       action: 'looking-down',
-      x: x - rect.x,
-      y: y - rect.y,
+      x: x - (rect.x + window.scrollX),
+      y: y - (rect.y + window.scrollY),
       parent: findCssSelector(this),
     });
   }
