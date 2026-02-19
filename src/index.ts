@@ -1001,7 +1001,7 @@ export class MovieScreen extends ReactiveElement {
       top: 48px;
       left: 30px;
       width: 200px;
-      transform: rotateY(33deg) rotateZ(-1deg) rotateX(-10deg);
+      transform: rotateY(33deg) rotateZ(-1deg) rotateX(-7deg);
       aspect-ratio: 1.78;
       border: unset;
       pointer-events: none;
@@ -1026,16 +1026,22 @@ export class MovieScreen extends ReactiveElement {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    this.#player.volume = 0;
+    this.#player.volume = 0.05;
     this.#player.controls = false;
     this.#player.src = 'https://www.youtube.com/watch?v=WeyLEe1T0yo';
+    this.#player.addEventListener('ended', this.#onFinish);
     this.#player.play();
+
     this.#img.src = inlineSVG(movieScreen());
 
     root.append(this.#img, this.#player);
 
     return root;
   }
+
+  #onFinish = () => {
+    this.#player.style.display = 'none';
+  };
 }
 
 declare global {
