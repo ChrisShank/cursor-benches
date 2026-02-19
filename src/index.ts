@@ -16,6 +16,7 @@ import {
   cursorMat,
   movieScreen,
   cursorBench,
+  grass,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -243,6 +244,23 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       aspect-ratio: 2.04;
       width: 85px;
       user-select: none;
+    }
+
+    :host(:hover)::after {
+      display: block;
+      position: absolute;
+      height: 20%;
+      width: 120%;
+      bottom: 10%;
+      right: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    :host(:hover)::after {
+      opacity: 1;
     }
 
     img {
@@ -1030,7 +1048,7 @@ export class MovieScreen extends ReactiveElement {
     this.#player.controls = false;
     this.#player.src = 'https://www.youtube.com/watch?v=WeyLEe1T0yo';
     this.#player.addEventListener('ended', this.#onFinish);
-    this.#player.play();
+    // this.#player.play();
 
     this.#img.src = inlineSVG(movieScreen());
 
@@ -1044,6 +1062,35 @@ export class MovieScreen extends ReactiveElement {
   };
 }
 
+export class CursorGrass extends ReactiveElement {
+  static tagName = 'cursor-grass';
+
+  static styles = css`
+    :host {
+      display: block;
+      width: 10px;
+      aspect-ratio: 1.5;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+  `;
+
+  #img = document.createElement('img');
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.#img.src = inlineSVG(grass());
+
+    root.appendChild(this.#img);
+
+    return root;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'mouse-cursor': MouseCursor;
@@ -1053,6 +1100,7 @@ declare global {
     'cursor-sign': CursorSign;
     'cursor-infographic': CursorInfographic;
     'movie-screen': MovieScreen;
+    'cursor-grass': CursorGrass;
   }
 }
 
@@ -1063,3 +1111,4 @@ CursorPark.define();
 CursorSign.define();
 CursorInfographic.define();
 MovieScreen.define();
+CursorGrass.define();
