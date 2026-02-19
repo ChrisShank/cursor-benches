@@ -109,9 +109,9 @@ export class CursorAnimation {
   #executeKeyFrame = () => {
     // commit the current keyframe values
     if (this.#currentKeyFrame !== undefined) {
-      if (this.#currentKeyFrame.x !== undefined) this.#cursor.x = this.#currentKeyFrame.x;
-      if (this.#currentKeyFrame.y !== undefined) this.#cursor.y = this.#currentKeyFrame.y;
-      if (this.#currentKeyFrame.rotation !== undefined) this.#cursor.rotation = this.#currentKeyFrame.rotation;
+      if (this.#currentKeyFrame.x !== undefined) this.#cursor.style.left = this.#currentKeyFrame.x + 'px';
+      if (this.#currentKeyFrame.y !== undefined) this.#cursor.style.top = this.#currentKeyFrame.y + 'px';
+      if (this.#currentKeyFrame.rotation !== undefined) this.#cursor.style.rotate = this.#currentKeyFrame.rotation + 'deg';
     }
 
     // check if there is another keyframe
@@ -190,6 +190,7 @@ export class MouseCursor extends ReactiveElement {
   }
 
   #internals = this.attachInternals();
+  #animation: CursorAnimation | null = null;
   #img = document.createElement('img');
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
@@ -208,7 +209,28 @@ export class MouseCursor extends ReactiveElement {
     super.update(changedProperties);
 
     if (changedProperties.has('x')) {
-      this.style.left = this.x + 'px';
+      // Temporary place to animate bench interactions
+      if (
+        changedProperties.get('action') !== 'pointing' &&
+        (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards')
+      ) {
+        this.#animation?.cancel();
+        const previousX = changedProperties.get('x') || 0;
+        const x = this.x;
+        const direction = Math.sign(x - previousX);
+        this.#animation = new CursorAnimation(this, 250, [
+          { percentage: 0, x: previousX, rotation: 0 },
+          { percentage: 33, x: previousX, rotation: direction * 10 },
+          { percentage: 66, x, rotation: direction * -7 },
+          { percentage: 100, x, rotation: 0 },
+        ]);
+
+        this.#animation.start();
+
+        this.#animation.finished.then(() => (this.#animation = null));
+      } else {
+        this.style.left = this.x + 'px';
+      }
     }
 
     if (changedProperties.has('y')) {
@@ -220,6 +242,9 @@ export class MouseCursor extends ReactiveElement {
     }
 
     if (changedProperties.has('action') || changedProperties.has('scale') || changedProperties.has('color')) {
+      this.#animation?.cancel();
+      this.#animation = null;
+
       const previousAction = changedProperties.get('action');
       if (previousAction) {
         this.#internals.states.delete(previousAction);
