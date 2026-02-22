@@ -19,6 +19,7 @@ import {
   grass,
   cursorPath,
   cursorTree,
+  cursorRocks,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -542,6 +543,100 @@ export class CursorMat extends ReactiveElement implements CursorObject {
   };
 }
 
+export class CursorRock extends ReactiveElement implements CursorObject {
+  static tagName = 'cursor-rock';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      user-select: none;
+    }
+
+    img {
+      display: block;
+      width: 100px;
+    }
+
+    /* place on tip of cursor */
+    ::slotted(mouse-cursor) {
+      translate: -25% -25%;
+    }
+  `;
+
+  @property({ type: String, reflect: true }) type = '';
+
+  #cursor: MouseCursor | null = null;
+  #rocks = document.createElement('img');
+
+  get #park() {
+    return this.closest('cursor-park');
+  }
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.#rocks.src = inlineSVG(cursorRocks());
+
+    root.append(this.#rocks, document.createElement('slot'));
+
+    this.#rocks.addEventListener('click', this.#onAcquireClick);
+
+    return root;
+  }
+
+  acquireCursor(cursor: MouseCursor, x = 0): void {
+    this.#cursor = cursor;
+    (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor(this.#cursor);
+    this.appendChild(this.#cursor);
+
+    this.#rocks.removeEventListener('click', this.#onAcquireClick);
+    document.addEventListener('click', this.#onReleaseClick, { capture: true });
+
+    const rect = this.#rocks.getBoundingClientRect();
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'crouching',
+      x: x - (rect.x + window.scrollX),
+      y: 0,
+      parent: findCssSelector(this),
+    });
+  }
+
+  releaseCursor(_cursor: MouseCursor): void {
+    this.#cursor = null;
+    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
+    this.#rocks.addEventListener('click', this.#onAcquireClick);
+  }
+
+  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
+  #onReleaseClick = (event: PointerEvent) => {
+    if (this.#cursor === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (event.target === this) {
+      const cursor = this.#cursor;
+      this.releaseCursor(this.#cursor);
+      // give control back to the park
+      this.#park?.acquireCursor(cursor);
+    }
+  };
+
+  #onAcquireClick = (event: PointerEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+    if (cursor) {
+      this.acquireCursor(cursor, event.pageX);
+    }
+  };
+}
+
 export class CursorSign extends ReactiveElement implements CursorObject {
   static tagName = 'cursor-sign';
 
@@ -558,8 +653,8 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     div {
       display: block;
       position: absolute;
-      height: 20%;
-      width: 120%;
+      height: 25%;
+      width: 100%;
       bottom: 10%;
       right: 100%;
       background: rgba(0, 0, 0, 0.15);
@@ -1173,6 +1268,7 @@ declare global {
     'cursor-grass': CursorGrass;
     'cursor-path': CursorPath;
     'cursor-tree': CursorTree;
+    'cursor-rock': CursorRock;
   }
 }
 
@@ -1186,3 +1282,4 @@ MovieScreen.define();
 CursorGrass.define();
 CursorPath.define();
 CursorTree.define();
+CursorRock.define();
