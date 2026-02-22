@@ -1,5 +1,5 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
-import { ReactiveElement, css, property, type PropertyValues } from '@folkjs/dom/ReactiveElement';
+import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import {
   pointingCursor,
@@ -17,6 +17,7 @@ import {
   movieScreen,
   cursorBench,
   grass,
+  cursorPath,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -218,7 +219,7 @@ export class MouseCursor extends ReactiveElement {
         const previousX = changedProperties.get('x') || 0;
         const x = this.x;
         const direction = Math.sign(x - previousX);
-        this.#animation = new CursorAnimation(this, 250, [
+        this.#animation = new CursorAnimation(this, 200, [
           { percentage: 0, x: previousX, rotation: 0 },
           { percentage: 33, x: previousX, rotation: direction * 10 },
           { percentage: 66, x, rotation: direction * -7 },
@@ -650,7 +651,7 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
       position: relative;
       /* 10 x 12 */
       aspect-ratio: 0.83;
-      height: 40px;
+      height: 50px;
       user-select: none;
     }
 
@@ -660,7 +661,7 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
       height: 50%;
       width: 120%;
       top: -20%;
-      right: 110%;
+      right: 100%;
       background: rgba(0, 0, 0, 0.15);
       border-radius: 5px;
       opacity: 0;
@@ -675,6 +676,10 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
     img {
       height: 100%;
       width: 100%;
+    }
+
+    ::slotted(mouse-cursor) {
+      translate: -50% 0%;
     }
   `;
 
@@ -1116,6 +1121,36 @@ export class CursorGrass extends ReactiveElement {
   }
 }
 
+export class CursorPath extends ReactiveElement {
+  static tagName = 'cursor-path';
+
+  static styles = css`
+    :host {
+      display: block;
+      pointer-events: none;
+      aspect-ratio: 1.5;
+      background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorPath()))};
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+  `;
+}
+
+export class CursorTree extends ReactiveElement {
+  static tagName = 'cursor-path';
+
+  static styles = css`
+    :host {
+      display: block;
+      pointer-events: none;
+      aspect-ratio: 1.5;
+      background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorPath()))};
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+  `;
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'mouse-cursor': MouseCursor;
@@ -1126,6 +1161,7 @@ declare global {
     'cursor-infographic': CursorInfographic;
     'movie-screen': MovieScreen;
     'cursor-grass': CursorGrass;
+    'cursor-path': CursorPath;
   }
 }
 
@@ -1137,3 +1173,4 @@ CursorSign.define();
 CursorInfographic.define();
 MovieScreen.define();
 CursorGrass.define();
+CursorPath.define();
