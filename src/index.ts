@@ -18,6 +18,7 @@ import {
   cursorBench,
   grass,
   cursorPath,
+  cursorTree,
 } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
@@ -383,7 +384,6 @@ export class CursorBench extends ReactiveElement implements CursorObject {
 
   #onKeydown = (event: KeyboardEvent) => {
     if (this.#cursor === null) return;
-
     if (event.code === 'ArrowLeft' && this.#cursor.x > 0) {
       event.preventDefault();
       this.#animateCursor(-2);
@@ -464,6 +464,8 @@ export class CursorMat extends ReactiveElement implements CursorObject {
     }
   `;
 
+  @property({ type: String, reflect: true }) type = '';
+
   #cursor: MouseCursor | null = null;
   #mat = document.createElement('img');
 
@@ -473,12 +475,19 @@ export class CursorMat extends ReactiveElement implements CursorObject {
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
-    this.#mat.src = inlineSVG(cursorMat());
     root.append(this.#mat, document.createElement('slot'));
 
     this.#mat.addEventListener('click', this.#onAcquireClick);
 
     return root;
+  }
+
+  protected update(changedProperties: PropertyValues<this>): void {
+    super.update(changedProperties);
+
+    if (changedProperties.has('type')) {
+      this.#mat.src = inlineSVG(cursorMat(this.type));
+    }
   }
 
   acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
@@ -1137,14 +1146,15 @@ export class CursorPath extends ReactiveElement {
 }
 
 export class CursorTree extends ReactiveElement {
-  static tagName = 'cursor-path';
+  static tagName = 'cursor-tree';
 
   static styles = css`
     :host {
       display: block;
       pointer-events: none;
-      aspect-ratio: 1.5;
-      background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorPath()))};
+      width: 150px;
+      aspect-ratio: 0.68;
+      background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorTree()))};
       background-size: contain;
       background-repeat: no-repeat;
     }
@@ -1162,6 +1172,7 @@ declare global {
     'movie-screen': MovieScreen;
     'cursor-grass': CursorGrass;
     'cursor-path': CursorPath;
+    'cursor-tree': CursorTree;
   }
 }
 
@@ -1174,3 +1185,4 @@ CursorInfographic.define();
 MovieScreen.define();
 CursorGrass.define();
 CursorPath.define();
+CursorTree.define();
