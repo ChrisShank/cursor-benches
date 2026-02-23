@@ -669,7 +669,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
       transition: opacity 0.2s ease-out;
     }
 
-    :host(:hover) div,
+    :host(:hover) click-zone,
     click-zone:hover {
       opacity: 1;
     }
@@ -679,20 +679,25 @@ export class CursorSign extends ReactiveElement implements CursorObject {
       width: 100%;
     }
 
-    popover {
-      display: block;
+    div {
+      text-align: center;
+      opacity: 0;
       position: absolute;
-      left: 110%;
-      top: 0%;
-      width: 100%;
-      height: 100%;
-      background: green;
+      inset: -10% -250% -10% 110%;
+      background: #deeade;
+      padding: 0 0.5rem;
+      border-radius: 4px;
+      transition: opacity 200ms ease-out;
+      box-sizing: border-box;
+      overflow: scroll;
+      box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+      z-index: 2;
     }
   `;
-
-  #img = document.createElement('img');
-  #clickZone = document.createElement('click-zone');
   #cursor: MouseCursor | null = null;
+  #img = document.createElement('img');
+  #message = document.createElement('div');
+  #clickZone = document.createElement('click-zone');
 
   get #park() {
     return this.closest('cursor-park');
@@ -704,12 +709,11 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     this.#img.src = inlineSVG(parkSign());
     this.#clickZone.addEventListener('click', this.#onAcquireClick);
 
-    const message = document.createElement('div');
     const slot = document.createElement('slot');
     slot.name = 'message';
-    message.appendChild(slot);
+    this.#message.appendChild(slot);
 
-    root.append(document.createElement('slot'), this.#clickZone, this.#img, message);
+    root.append(document.createElement('slot'), this.#clickZone, this.#img, this.#message);
 
     return root;
   }
@@ -730,10 +734,13 @@ export class CursorSign extends ReactiveElement implements CursorObject {
       y: y - (rect.y + window.scrollY),
       parent: findCssSelector(this),
     });
+
+    this.#message.style.opacity = '0.9';
   }
 
   releaseCursor(_cursor: MouseCursor): void {
     this.#cursor = null;
+    this.#message.style.opacity = '0';
     document.removeEventListener('click', this.#onReleaseClick, { capture: true });
     this.#clickZone.addEventListener('click', this.#onAcquireClick);
   }
@@ -780,7 +787,7 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
       user-select: none;
     }
 
-    div {
+    click-zone {
       display: block;
       position: absolute;
       height: 50%;
@@ -793,8 +800,8 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
       transition: opacity 0.2s ease-out;
     }
 
-    :host(:hover) div,
-    div:hover {
+    :host(:hover) click-zone,
+    click-zone:hover {
       opacity: 1;
     }
 
@@ -806,11 +813,27 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
     ::slotted(mouse-cursor) {
       translate: -50% 0%;
     }
+
+    div {
+      text-align: center;
+      opacity: 0;
+      position: absolute;
+      inset: -100% -500% -100% 110%;
+      background: #deeade;
+      padding: 0 0.5rem;
+      border-radius: 4px;
+      transition: opacity 200ms ease-out;
+      box-sizing: border-box;
+      overflow: scroll;
+      z-index: 2;
+      box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+    }
   `;
 
-  #img = document.createElement('img');
-  #clickZone = document.createElement('div');
   #cursor: MouseCursor | null = null;
+  #img = document.createElement('img');
+  #message = document.createElement('div');
+  #clickZone = document.createElement('click-zone');
 
   get #park() {
     return this.closest('cursor-park');
@@ -819,10 +842,13 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
+    const slot = document.createElement('slot');
+    slot.name = 'message';
+    this.#message.appendChild(slot);
     this.#img.src = inlineSVG(parkInfographic());
     this.#clickZone.addEventListener('click', this.#onAcquireClick);
 
-    root.append(document.createElement('slot'), this.#clickZone, this.#img);
+    root.append(document.createElement('slot'), this.#clickZone, this.#img, this.#message);
 
     return root;
   }
@@ -843,10 +869,12 @@ export class CursorInfographic extends ReactiveElement implements CursorObject {
       y: y - (rect.y + window.scrollY),
       parent: findCssSelector(this),
     });
+    this.#message.style.opacity = '0.9';
   }
 
   releaseCursor(_cursor: MouseCursor): void {
     this.#cursor = null;
+    this.#message.style.opacity = '0';
     document.removeEventListener('click', this.#onReleaseClick, { capture: true });
     this.#clickZone.addEventListener('click', this.#onAcquireClick);
   }
@@ -899,7 +927,7 @@ export class CursorPark extends ReactiveElement implements CursorObject {
 
   static styles = css`
     :host {
-      display: block;
+      display: block !important;
     }
 
     ::slotted(mouse-cursor:state(self)) {
@@ -1161,6 +1189,7 @@ export class MovieScreen extends ReactiveElement {
       position: relative;
       aspect-ratio: 1.3;
       width: 300px;
+      user-select: none;
     }
 
     img {
@@ -1234,6 +1263,7 @@ export class CursorGrass extends ReactiveElement {
       display: block;
       width: 10px;
       aspect-ratio: 1.5;
+      user-select: none;
     }
 
     img {
@@ -1276,7 +1306,7 @@ export class CursorTree extends ReactiveElement {
   static styles = css`
     :host {
       display: block;
-      pointer-events: none;
+      user-select: none;
       width: 150px;
       aspect-ratio: 0.68;
       background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorTree()))};

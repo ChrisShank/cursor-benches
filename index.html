@@ -13,6 +13,7 @@
       }
 
       cursor-park {
+        display: none;
         width: 2500px;
         /* same aspect ratio as path */
         aspect-ratio: 1.4;
@@ -24,7 +25,7 @@
     </style>
   </head>
   <body>
-    <cursor-park src="automerge:3N5N7Bsvp8T2Gfx4gjirLB7eDHUY">
+    <cursor-park src="">
       <cursor-path style="top: 250px; left: 250px; width: 2250px"></cursor-path>
 
       <cursor-tree style="top: 32px; left: 197px; opacity: 0.8"></cursor-tree>
@@ -32,12 +33,21 @@
       <cursor-tree style="top: 115px; left: 164px"></cursor-tree>
       <cursor-tree style="top: 120px; left: 90px"></cursor-tree>
 
-      <cursor-sign style="top: 424px; left: 523px"></cursor-sign>
+      <cursor-sign style="top: 424px; left: 523px">
+        <p slot="message">
+          Welcome! This park is a peaceful and secluded space to relax from the bustling feeds and chatter of the internet. Feel free to
+          take a seat and explore the park with others.
+        </p>
+      </cursor-sign>
 
       <cursor-bench style="top: 564px; left: 819px; rotate: -4deg"></cursor-bench>
       <cursor-bench style="top: 559px; left: 911px; rotate: -2deg"></cursor-bench>
 
-      <cursor-infographic style="top: 606px; left: 1307px"></cursor-infographic>
+      <cursor-infographic style="top: 606px; left: 1307px">
+        <p slot="message">
+          What are we? <br /><br />Sometimes we are the extension of someone hand. <br /><br />Sometimes we embody their presence to others.
+        </p>
+      </cursor-infographic>
 
       <cursor-bench style="top: 926px; left: 1137px; rotate: -10deg"></cursor-bench>
       <cursor-bench style="top: 939px; left: 1050px; rotate: -7deg"></cursor-bench>
@@ -50,6 +60,15 @@
       <cursor-rock style="top: 910px; left: 1585px"></cursor-rock>
       <cursor-mat type="quilt" style="top: 978px; left: 1479px"></cursor-mat>
       <cursor-mat type="serape" style="top: 1082px; left: 1595px"></cursor-mat>
+
+      <cursor-infographic style="top: 1300px; left: 890px">
+        <p slot="message">
+          The ampitheater screens movies daily. Feel free to join by sitting on a mat!
+          <br />
+          <br />
+          Schedule: TBD
+        </p>
+      </cursor-infographic>
 
       <cursor-mat type="picnic" movie style="top: 1617px; left: 1501px"></cursor-mat>
       <cursor-mat type="serape" movie style="top: 1596px; left: 1632px"></cursor-mat>
