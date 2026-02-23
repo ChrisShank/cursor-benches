@@ -379,27 +379,24 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       const rect = this.getBoundingClientRect();
       const x = clamp(0, event.pageX - (rect.x + window.scrollX), this.offsetWidth) - cursor.offsetWidth / 2;
       this.acquireCursor(cursor, x);
-      // cursor.x = clamp(0, event.pageX - rect.x, this.offsetWidth) - cursor.offsetWidth / 2;
     }
   };
 
   #onKeydown = (event: KeyboardEvent) => {
     if (this.#cursor === null) return;
-    if (event.code === 'ArrowLeft' && this.#cursor.x > 0) {
+    if (event.code === 'ArrowLeft') {
       event.preventDefault();
-      this.#animateCursor(-2);
-    } else if (event.code === 'ArrowRight' && this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) {
+      if (this.#cursor.x > 3) this.#animateCursor(-2);
+    } else if (event.code === 'ArrowRight') {
       event.preventDefault();
-      this.#animateCursor(2);
+      if (this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) this.#animateCursor(2);
     } else if (event.code === 'ArrowUp') {
       event.preventDefault();
-      // this.#cursor.action = 'sitting-forwards';
       this.closest('cursor-park')?.updateSelfCursor({
         action: 'sitting-forwards',
       });
     } else if (event.code === 'ArrowDown') {
       event.preventDefault();
-      // this.#cursor.action = 'sitting-backwards';
       this.closest('cursor-park')?.updateSelfCursor({
         action: 'sitting-backwards',
       });
@@ -410,7 +407,6 @@ export class CursorBench extends ReactiveElement implements CursorObject {
     if (this.#cursor === null) return;
 
     if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-      // this.#cursor.action = 'sitting';
       this.closest('cursor-park')?.updateSelfCursor({
         action: 'sitting',
       });
@@ -460,7 +456,7 @@ export class CursorMat extends ReactiveElement implements CursorObject {
 
     /* place on tip of cursor */
     ::slotted(mouse-cursor) {
-      translate: -25% -70%;
+      translate: -25% -65%;
       transform: rotateY(26deg) rotateX(-3deg) rotateZ(-8deg);
     }
   `;
@@ -506,12 +502,22 @@ export class CursorMat extends ReactiveElement implements CursorObject {
       y: y - (rect.y + window.scrollY),
       parent: findCssSelector(this),
     });
+
+    if (this.hasAttribute('movie')) {
+      const movie = document.querySelector('movie-screen');
+      if (movie) movie.volume = 0.1;
+    }
   }
 
   releaseCursor(_cursor: MouseCursor): void {
     this.#cursor = null;
     document.removeEventListener('click', this.#onReleaseClick, { capture: true });
     this.#mat.addEventListener('click', this.#onAcquireClick);
+
+    if (this.hasAttribute('movie')) {
+      const movie = document.querySelector('movie-screen');
+      if (movie) movie.volume = 0;
+    }
   }
 
   // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
@@ -650,13 +656,13 @@ export class CursorSign extends ReactiveElement implements CursorObject {
       user-select: none;
     }
 
-    div {
+    click-zone {
       display: block;
       position: absolute;
-      height: 25%;
-      width: 100%;
+      height: 30%;
+      width: 75%;
       bottom: 10%;
-      right: 100%;
+      right: 90%;
       background: rgba(0, 0, 0, 0.15);
       border-radius: 5px;
       opacity: 0;
@@ -664,7 +670,7 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     }
 
     :host(:hover) div,
-    div:hover {
+    click-zone:hover {
       opacity: 1;
     }
 
@@ -672,10 +678,20 @@ export class CursorSign extends ReactiveElement implements CursorObject {
       height: 100%;
       width: 100%;
     }
+
+    popover {
+      display: block;
+      position: absolute;
+      left: 110%;
+      top: 0%;
+      width: 100%;
+      height: 100%;
+      background: green;
+    }
   `;
 
   #img = document.createElement('img');
-  #clickZone = document.createElement('div');
+  #clickZone = document.createElement('click-zone');
   #cursor: MouseCursor | null = null;
 
   get #park() {
@@ -688,7 +704,12 @@ export class CursorSign extends ReactiveElement implements CursorObject {
     this.#img.src = inlineSVG(parkSign());
     this.#clickZone.addEventListener('click', this.#onAcquireClick);
 
-    root.append(document.createElement('slot'), this.#clickZone, this.#img);
+    const message = document.createElement('div');
+    const slot = document.createElement('slot');
+    slot.name = 'message';
+    message.appendChild(slot);
+
+    root.append(document.createElement('slot'), this.#clickZone, this.#img, message);
 
     return root;
   }
@@ -1178,11 +1199,13 @@ export class MovieScreen extends ReactiveElement {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    this.#player.volume = 0.05;
+    this.#player.volume = 0;
     this.#player.controls = false;
     this.#player.src = 'https://www.youtube.com/watch?v=WeyLEe1T0yo';
     this.#player.addEventListener('ended', this.#onFinish);
-    // this.#player.play();
+    setTimeout(() => {
+      this.#player.play();
+    }, 5000);
 
     this.#img.src = inlineSVG(movieScreen());
 
@@ -1194,6 +1217,13 @@ export class MovieScreen extends ReactiveElement {
   #onFinish = () => {
     this.#player.style.display = 'none';
   };
+
+  get volume() {
+    return this.#player.volume;
+  }
+  set volume(value: number) {
+    this.#player.volume = value;
+  }
 }
 
 export class CursorGrass extends ReactiveElement {
