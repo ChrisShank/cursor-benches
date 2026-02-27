@@ -6,7 +6,7 @@ import 'youtube-video-element';
 import { convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE, inlineSVG } from './utils';
 import { pointingCursor, MouseCursor } from './cursor';
 import { CursorPark } from './park';
-import { CursorBench, CursorGrass, CursorPath, CursorTree, MovieScreen, type ICursorObject, type Point } from './cursor-objects';
+import { CursorBench, CursorGrass, CursorMat, CursorPath, CursorTree, MovieScreen, type ICursorObject, type Point } from './cursor-objects';
 
 /* GLOBAL STYLES */
 const globalStyles = new CSSStyleSheet();
@@ -22,116 +22,6 @@ globalStyles.replaceSync(`
 `);
 
 document.adoptedStyleSheets.push(globalStyles);
-
-export class CursorMat extends ReactiveElement implements ICursorObject {
-  static tagName = 'cursor-mat';
-
-  static styles = css`
-    :host {
-      display: block;
-      position: relative;
-      user-select: none;
-    }
-
-    img {
-      display: block;
-      width: 80px;
-    }
-
-    /* place on tip of cursor */
-    ::slotted(mouse-cursor) {
-      translate: -25% -65%;
-      transform: rotateY(26deg) rotateX(-3deg) rotateZ(-8deg);
-    }
-  `;
-
-  @property({ type: String, reflect: true }) type = '';
-
-  #cursor: MouseCursor | null = null;
-  #mat = document.createElement('img');
-
-  get #park() {
-    return this.closest('cursor-park');
-  }
-
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
-    const root = super.createRenderRoot();
-    root.append(this.#mat, document.createElement('slot'));
-
-    this.#mat.addEventListener('click', this.#onAcquireClick);
-
-    return root;
-  }
-
-  protected update(changedProperties: PropertyValues<this>): void {
-    super.update(changedProperties);
-
-    if (changedProperties.has('type')) {
-      this.#mat.src = inlineSVG(cursorMat(this.type));
-    }
-  }
-
-  acquireCursor(cursor: MouseCursor, { x, y } = { x: 0, y: 0 }): void {
-    this.#cursor = cursor;
-    (this.#cursor?.parentElement as unknown as ICursorObject)?.releaseCursor(this.#cursor);
-    this.appendChild(this.#cursor);
-
-    this.#mat.removeEventListener('click', this.#onAcquireClick);
-    document.addEventListener('click', this.#onReleaseClick, { capture: true });
-
-    const rect = this.#mat.getBoundingClientRect();
-    this.closest('cursor-park')?.updateSelfCursor({
-      action: 'crouching',
-      x: x - (rect.x + window.scrollX),
-      y: y - (rect.y + window.scrollY),
-      parent: findCssSelector(this),
-    });
-
-    if (this.hasAttribute('movie')) {
-      const movie = document.querySelector('movie-screen');
-      if (movie) movie.volume = 0.1;
-    }
-  }
-
-  releaseCursor(_cursor: MouseCursor): void {
-    this.#cursor = null;
-    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
-    this.#mat.addEventListener('click', this.#onAcquireClick);
-
-    if (this.hasAttribute('movie')) {
-      const movie = document.querySelector('movie-screen');
-      if (movie) movie.volume = 0;
-    }
-  }
-
-  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
-  #onReleaseClick = (event: PointerEvent) => {
-    if (this.#cursor === null) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    if (event.target === this) {
-      const cursor = this.#cursor;
-      this.releaseCursor(this.#cursor);
-      // give control back to the park
-      this.#park?.acquireCursor(cursor);
-    }
-  };
-
-  #onAcquireClick = (event: PointerEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
-
-    if (cursor) {
-      this.acquireCursor(cursor, { x: event.pageX, y: event.pageY });
-    }
-  };
-}
 
 export class CursorRock extends ReactiveElement implements ICursorObject {
   static tagName = 'cursor-rock';

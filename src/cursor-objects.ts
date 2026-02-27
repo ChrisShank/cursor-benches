@@ -1,7 +1,7 @@
-import { ReactiveElement, css, property, unsafeCSS } from '@folkjs/dom/ReactiveElement';
+import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import type { MouseCursor } from './cursor';
 import { clamp, convertSVGIntoCssURL, inlineSVG } from './utils';
-import { cursorBench, cursorPath, cursorTree, grass, movieScreen } from './sprites';
+import { cursorBench, cursorMat, cursorPath, cursorTree, grass, movieScreen } from './sprites';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import type { CursorItem } from './park';
 import type CustomVideoElement from 'youtube-video-element';
@@ -12,7 +12,7 @@ export interface Point {
 }
 
 export interface ICursorObject {
-  acquireCursor(cursor: MouseCursor, point?: Point): void;
+  acquireCursor(cursor: MouseCursor, point: Point): void;
   releaseCursor(cursor: MouseCursor): void;
 }
 
@@ -175,6 +175,74 @@ export class CursorBench extends CursorObject {
     this.closest('cursor-park')?.updateSelfCursor({
       x: this.cursor.x + delta,
     });
+  }
+}
+
+export class CursorMat extends CursorObject {
+  static tagName = 'cursor-mat';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      user-select: none;
+    }
+
+    img {
+      display: block;
+      width: 80px;
+    }
+
+    /* place on tip of cursor */
+    ::slotted(mouse-cursor) {
+      translate: -25% -65%;
+      transform: rotateY(26deg) rotateX(-3deg) rotateZ(-8deg);
+    }
+  `;
+
+  @property({ type: String, reflect: true }) type = '';
+
+  #mat = document.createElement('img');
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    root.append(this.#mat, document.createElement('slot'));
+
+    return root;
+  }
+
+  protected update(changedProperties: PropertyValues<this>): void {
+    super.update(changedProperties);
+
+    if (changedProperties.has('type')) {
+      this.#mat.src = inlineSVG(cursorMat(this.type));
+    }
+  }
+
+  acquireCursor(cursor: MouseCursor, point = { x: 0, y: 0 }): void {
+    super.acquireCursor(cursor, point);
+
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'crouching',
+      x: point.x,
+      y: point.y,
+      parent: findCssSelector(this),
+    });
+
+    if (this.hasAttribute('movie')) {
+      const movie = document.querySelector('movie-screen');
+      if (movie) movie.volume = 0.15;
+    }
+  }
+
+  releaseCursor(): void {
+    super.releaseCursor();
+
+    if (this.hasAttribute('movie')) {
+      const movie = document.querySelector('movie-screen');
+      if (movie) movie.volume = 0;
+    }
   }
 }
 
