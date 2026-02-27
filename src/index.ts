@@ -1,133 +1,20 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import { findCssSelector } from '@folkjs/dom/css-selector';
-import {
-  pointingCursor,
-  sittingCursor,
-  sittingCursorWithLegsForward,
-  sittingCursorWithLegsBack,
-  standingCursor,
-  slidingCursor,
-  crouching,
-  parkSign,
-  parkInfographic,
-  cursorLookingUp,
-  cursorLookingDown,
-  cursorMat,
-  movieScreen,
-  cursorBench,
-  grass,
-  cursorPath,
-  cursorTree,
-  cursorRocks,
-} from './sprites';
+import { parkSign, parkInfographic, cursorMat, movieScreen, cursorBench, grass, cursorPath, cursorTree, cursorRocks } from './sprites';
 import { PerfectCursor } from 'perfect-cursors';
 import { DocHandle, isValidAutomergeUrl, Repo, WebSocketClientAdapter, type DocHandleChangePayload } from '@folkjs/collab/automerge';
 import 'youtube-video-element';
 import type CustomVideoElement from 'youtube-video-element';
+import { clamp, convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE, inlineSVG, UUID } from './utils';
+import { pointingCursor, type CursorAnimation, MouseCursor } from './cursor';
 
 interface CursorObject {
   acquireCursor(cursor: MouseCursor): void;
   releaseCursor(cursor: MouseCursor): void;
 }
 
-/* CONSTANTS */
-const COLORS = ['#447F59', '#A10314', '#FB546E', '#8750C9', '#E601B2', '#2962C5'];
-// const SCALES = [1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9];
-const SCALES = [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3];
-const CURSOR_COLOR = COLORS[Math.floor(Math.random() * COLORS.length)];
-const CURSOR_SCALE = SCALES[Math.floor(Math.random() * SCALES.length)];
-const UUID = crypto.randomUUID();
-
 PerfectCursor.MAX_INTERVAL = 100;
-
-/* UTILITIES */
-const clamp = (min: number, value: number, max: number) => Math.min(Math.max(value, min), max);
-
-const inlineSVG = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-
-const convertSVGIntoCssURL = (svg: string) => `url('${inlineSVG(svg)}')`;
-
-export class AcquireCursorEvent extends Event {
-  static eventType = 'acquire-cursor';
-
-  constructor() {
-    super(AcquireCursorEvent.eventType, { bubbles: true });
-  }
-}
-
-export interface CursorKeyFrame {
-  percentage: number;
-  x?: number;
-  y?: number;
-  rotation?: number;
-}
-
-interface ComputedCursorKeyFrame {
-  timeDiff: number;
-  x: number | undefined;
-  y: number | undefined;
-  rotation: number | undefined;
-}
-
-export class CursorAnimation {
-  #cursor;
-  #index = 0;
-  #keyframes: ComputedCursorKeyFrame[];
-  #currentKeyFrame: ComputedCursorKeyFrame | undefined;
-  #isPending = false;
-  #timeout = -1;
-  #promise = Promise.withResolvers<void>();
-
-  get pending() {
-    return this.#isPending;
-  }
-
-  get finished() {
-    return this.#promise.promise;
-  }
-
-  constructor(cursor: MouseCursor, duration: number, keyframes: CursorKeyFrame[]) {
-    this.#cursor = cursor;
-    let previousTime = 0;
-    this.#keyframes = keyframes.map(({ percentage, x, y, rotation }) => {
-      const time = (duration * percentage) / 100;
-      const timeDiff = time - previousTime;
-      previousTime = time;
-      return { timeDiff, x, y, rotation };
-    });
-  }
-
-  start() {
-    this.#isPending = true;
-    this.#executeKeyFrame();
-  }
-
-  cancel() {
-    this.#isPending = false;
-    clearTimeout(this.#timeout);
-    this.#promise.resolve();
-  }
-
-  #executeKeyFrame = () => {
-    // commit the current keyframe values
-    if (this.#currentKeyFrame !== undefined) {
-      if (this.#currentKeyFrame.x !== undefined) this.#cursor.style.left = this.#currentKeyFrame.x + 'px';
-      if (this.#currentKeyFrame.y !== undefined) this.#cursor.style.top = this.#currentKeyFrame.y + 'px';
-      if (this.#currentKeyFrame.rotation !== undefined) this.#cursor.style.rotate = this.#currentKeyFrame.rotation + 'deg';
-    }
-
-    // check if there is another keyframe
-    this.#currentKeyFrame = this.#keyframes[this.#index];
-    if (this.#currentKeyFrame === undefined) {
-      this.#promise.resolve();
-    } else {
-      // increment index for next time
-      this.#index += 1;
-      this.#timeout = setTimeout(this.#executeKeyFrame, this.#currentKeyFrame.timeDiff);
-    }
-  };
-}
 
 /* GLOBAL STYLES */
 const globalStyles = new CSSStyleSheet();
@@ -145,123 +32,6 @@ globalStyles.replaceSync(`
 document.adoptedStyleSheets.push(globalStyles);
 
 /* CUSTOM ELEMENTS */
-export class MouseCursor extends ReactiveElement {
-  static tagName = 'mouse-cursor';
-
-  static styles = css`
-    :host {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      user-select: none;
-      z-index: calc(Infinity);
-    }
-
-    img {
-      display: block;
-    }
-  `;
-
-  static actions = new Map([
-    ['pointing', pointingCursor],
-    ['sitting', sittingCursor],
-    ['sitting-backwards', sittingCursorWithLegsBack],
-    ['sitting-forwards', sittingCursorWithLegsForward],
-    ['standing', standingCursor],
-    ['sliding', slidingCursor],
-    ['crouching', crouching],
-    ['looking-up', cursorLookingUp],
-    ['looking-down', cursorLookingDown],
-  ]);
-
-  @property({ type: Number, reflect: true }) x = 0;
-
-  @property({ type: Number, reflect: true }) y = 0;
-
-  @property({ type: Number, reflect: true }) rotation = 0;
-
-  @property({ type: Number, reflect: true }) scale = 1.75;
-
-  @property({ type: String, reflect: true }) color = 'black';
-
-  @property({ type: String, reflect: true }) action = 'pointing';
-
-  get self() {
-    return UUID === this.id;
-  }
-
-  #internals = this.attachInternals();
-  #animation: CursorAnimation | null = null;
-  #img = document.createElement('img');
-
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
-    const root = super.createRenderRoot();
-
-    if (this.self) {
-      this.#internals.states.add('self');
-    }
-
-    root.appendChild(this.#img);
-
-    return root;
-  }
-
-  protected update(changedProperties: PropertyValues<this>): void {
-    super.update(changedProperties);
-
-    if (changedProperties.has('x')) {
-      // Temporary place to animate bench interactions
-      if (
-        changedProperties.get('action') !== 'pointing' &&
-        (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards')
-      ) {
-        this.#animation?.cancel();
-        const previousX = changedProperties.get('x') || 0;
-        const x = this.x;
-        const direction = Math.sign(x - previousX);
-        this.#animation = new CursorAnimation(this, 200, [
-          { percentage: 0, x: previousX, rotation: 0 },
-          { percentage: 33, x: previousX, rotation: direction * 10 },
-          { percentage: 66, x, rotation: direction * -7 },
-          { percentage: 100, x, rotation: 0 },
-        ]);
-
-        this.#animation.start();
-
-        this.#animation.finished.then(() => (this.#animation = null));
-      } else {
-        this.style.left = this.x + 'px';
-      }
-    }
-
-    if (changedProperties.has('y')) {
-      this.style.top = this.y + 'px';
-    }
-
-    if (changedProperties.has('rotation')) {
-      this.style.rotate = this.rotation + 'deg';
-    }
-
-    if (changedProperties.has('action') || changedProperties.has('scale') || changedProperties.has('color')) {
-      this.#animation?.cancel();
-      this.#animation = null;
-
-      const previousAction = changedProperties.get('action');
-      if (previousAction) {
-        this.#internals.states.delete(previousAction);
-      }
-
-      this.#internals.states.add(this.action);
-
-      const actionSprite = MouseCursor.actions.get(this.action) || pointingCursor;
-
-      this.#img.src = inlineSVG(actionSprite(this.color, this.scale));
-    }
-  }
-}
-
 export class CursorBench extends ReactiveElement implements CursorObject {
   static tagName = 'cursor-bench';
 
@@ -339,7 +109,6 @@ export class CursorBench extends ReactiveElement implements CursorObject {
       y: 0,
       parent: findCssSelector(this),
     });
-    // this.dispatchEvent(new AcquireCursorEvent());
   }
 
   releaseCursor(_cursor: MouseCursor): void {
@@ -948,11 +717,6 @@ export class CursorPark extends ReactiveElement implements CursorObject {
     const root = super.createRenderRoot();
 
     root.appendChild(document.createElement('slot'));
-
-    // this.addEventListener(AcquireCursorEvent.eventType, (e) => {
-    //   console.log('acquire', e.target);
-    //   this.#updateSelfCursorParent(e.target as HTMLElement);
-    // });
 
     return root;
   }
