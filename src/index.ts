@@ -1,13 +1,12 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import { findCssSelector } from '@folkjs/dom/css-selector';
-import { parkSign, parkInfographic, cursorMat, movieScreen, grass, cursorPath, cursorTree, cursorRocks } from './sprites';
+import { parkSign, parkInfographic, cursorMat, cursorRocks } from './sprites';
 import 'youtube-video-element';
-import type CustomVideoElement from 'youtube-video-element';
 import { convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE, inlineSVG } from './utils';
 import { pointingCursor, MouseCursor } from './cursor';
 import { CursorPark } from './park';
-import { CursorBench, type ICursorObject, type Point } from './cursor-objects';
+import { CursorBench, CursorGrass, CursorPath, CursorTree, MovieScreen, type ICursorObject, type Point } from './cursor-objects';
 
 /* GLOBAL STYLES */
 const globalStyles = new CSSStyleSheet();
@@ -491,142 +490,6 @@ export class CursorInfographic extends ReactiveElement implements ICursorObject 
       this.acquireCursor(cursor, { x: event.pageX, y: event.pageY });
     }
   };
-}
-
-export class MovieScreen extends ReactiveElement {
-  static tagName = 'movie-screen';
-
-  static styles = css`
-    :host {
-      display: block;
-      position: relative;
-      aspect-ratio: 1.3;
-      width: 300px;
-      user-select: none;
-    }
-
-    img {
-      height: 100%;
-      width: 100%;
-    }
-
-    youtube-video {
-      display: block;
-      position: absolute;
-      top: 48px;
-      left: 30px;
-      width: 200px;
-      transform: rotateY(33deg) rotateZ(-1deg) rotateX(-7deg);
-      aspect-ratio: 1.78;
-      border: unset;
-      pointer-events: none;
-      min-width: unset;
-      min-height: unset;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    youtube-video::after {
-      content: '';
-      display: block;
-      position: absolute;
-      inset: 0;
-      box-shadow: 0px 0px 50px 12px rgba(196, 196, 196, 0.75) inset;
-    }
-  `;
-
-  #img = document.createElement('img');
-  #player = document.createElement('youtube-video') as CustomVideoElement;
-
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
-    const root = super.createRenderRoot();
-
-    this.#player.volume = 0;
-    this.#player.controls = false;
-    this.#player.src = 'https://www.youtube.com/watch?v=WeyLEe1T0yo';
-    this.#player.addEventListener('ended', this.#onFinish);
-    setTimeout(() => {
-      this.#player.play();
-    }, 5000);
-
-    this.#img.src = inlineSVG(movieScreen());
-
-    root.append(this.#img, this.#player);
-
-    return root;
-  }
-
-  #onFinish = () => {
-    this.#player.style.display = 'none';
-  };
-
-  get volume() {
-    return this.#player.volume;
-  }
-  set volume(value: number) {
-    this.#player.volume = value;
-  }
-}
-
-export class CursorGrass extends ReactiveElement {
-  static tagName = 'cursor-grass';
-
-  static styles = css`
-    :host {
-      display: block;
-      width: 10px;
-      aspect-ratio: 1.5;
-      user-select: none;
-    }
-
-    img {
-      height: 100%;
-      width: 100%;
-    }
-  `;
-
-  #img = document.createElement('img');
-
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
-    const root = super.createRenderRoot();
-
-    this.#img.src = inlineSVG(grass());
-
-    root.appendChild(this.#img);
-
-    return root;
-  }
-}
-
-export class CursorPath extends ReactiveElement {
-  static tagName = 'cursor-path';
-
-  static styles = css`
-    :host {
-      display: block;
-      pointer-events: none;
-      aspect-ratio: 1.5;
-      background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorPath()))};
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
-  `;
-}
-
-export class CursorTree extends ReactiveElement {
-  static tagName = 'cursor-tree';
-
-  static styles = css`
-    :host {
-      display: block;
-      user-select: none;
-      width: 150px;
-      aspect-ratio: 0.68;
-      background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorTree()))};
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
-  `;
 }
 
 declare global {
