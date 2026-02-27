@@ -1,9 +1,10 @@
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import type { MouseCursor } from './cursor';
 import { clamp, convertSVGIntoCssURL, inlineSVG } from './utils';
-import { cursorBench, cursorMat, cursorPath, cursorRocks, cursorTree, grass, movieScreen, parkSign } from './sprites';
+import { cursorBench, cursorMat, cursorPath, cursorRocks, cursorTree, grass, movieScreen, parkInfographic, parkSign } from './sprites';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import type { CursorItem } from './park';
+import 'youtube-video-element';
 import type CustomVideoElement from 'youtube-video-element';
 
 export interface Point {
@@ -373,6 +374,92 @@ export class CursorSign extends CursorObject {
   releaseCursor(): void {
     super.releaseCursor();
 
+    this.#message.style.opacity = '0';
+  }
+}
+
+export class CursorInfographic extends CursorObject {
+  static tagName = 'cursor-infographic';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      /* 10 x 12 */
+      aspect-ratio: 0.83;
+      height: 50px;
+      user-select: none;
+    }
+
+    click-zone {
+      display: block;
+      position: absolute;
+      height: 100%;
+      width: 150%;
+      top: -25%;
+      right: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+
+    ::slotted(mouse-cursor) {
+      translate: -50% 0%;
+    }
+
+    div {
+      text-align: center;
+      opacity: 0;
+      position: absolute;
+      inset: -100% -500% -100% 110%;
+      background: #deeade;
+      padding: 0 0.5rem;
+      border-radius: 4px;
+      transition: opacity 200ms ease-out;
+      box-sizing: border-box;
+      overflow: scroll;
+      z-index: 2;
+      box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+    }
+  `;
+
+  #img = document.createElement('img');
+  #message = document.createElement('div');
+  #clickZone = document.createElement('click-zone');
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    const slot = document.createElement('slot');
+    slot.name = 'message';
+    this.#message.appendChild(slot);
+    this.#img.src = inlineSVG(parkInfographic());
+
+    root.append(document.createElement('slot'), this.#clickZone, this.#img, this.#message);
+
+    return root;
+  }
+
+  acquireCursor(cursor: MouseCursor, point: Point): void {
+    super.acquireCursor(cursor, point);
+
+    this.closest('cursor-park')?.updateSelfCursor({
+      action: 'looking-down',
+      x: point.x,
+      y: point.y,
+      parent: findCssSelector(this),
+    });
+
+    this.#message.style.opacity = '0.9';
+  }
+
+  releaseCursor(): void {
+    super.releaseCursor();
     this.#message.style.opacity = '0';
   }
 }
