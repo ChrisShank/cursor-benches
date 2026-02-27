@@ -1,13 +1,13 @@
 // import 'https://esm.sh/@folkjs/labs@0.0.7/standalone/folk-sync-attribute';
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import { findCssSelector } from '@folkjs/dom/css-selector';
-import { parkSign, parkInfographic, cursorMat, movieScreen, cursorBench, grass, cursorPath, cursorTree, cursorRocks } from './sprites';
+import { parkSign, parkInfographic, cursorMat, movieScreen, grass, cursorPath, cursorTree, cursorRocks } from './sprites';
 import 'youtube-video-element';
 import type CustomVideoElement from 'youtube-video-element';
-import { clamp, convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE, inlineSVG } from './utils';
-import { pointingCursor, type CursorAnimation, MouseCursor } from './cursor';
+import { convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE, inlineSVG } from './utils';
+import { pointingCursor, MouseCursor } from './cursor';
 import { CursorPark } from './park';
-import type { ICursorObject } from './cursor-objects';
+import { CursorBench, type ICursorObject, type Point } from './cursor-objects';
 
 /* GLOBAL STYLES */
 const globalStyles = new CSSStyleSheet();
@@ -23,183 +23,6 @@ globalStyles.replaceSync(`
 `);
 
 document.adoptedStyleSheets.push(globalStyles);
-
-/* CUSTOM ELEMENTS */
-export class CursorBench extends ReactiveElement implements ICursorObject {
-  static tagName = 'cursor-bench';
-
-  static styles = css`
-    :host {
-      display: block;
-      position: relative;
-      aspect-ratio: 2.04;
-      width: 85px;
-      user-select: none;
-    }
-
-    :host(:hover)::after {
-      display: block;
-      position: absolute;
-      height: 20%;
-      width: 120%;
-      bottom: 10%;
-      right: 100%;
-      background: rgba(0, 0, 0, 0.15);
-      border-radius: 5px;
-      opacity: 0;
-      transition: opacity 0.2s ease-out;
-    }
-
-    :host(:hover)::after {
-      opacity: 1;
-    }
-
-    img {
-      width: 100%;
-      height: 100%;
-    }
-
-    ::slotted(mouse-cursor) {
-      top: 50% !important;
-      translate: 0 -72%;
-    }
-  `;
-
-  #img = document.createElement('img');
-  #cursor: MouseCursor | null = null;
-  #animation: CursorAnimation | null = null;
-
-  get #park() {
-    return this.closest('cursor-park');
-  }
-
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
-    const root = super.createRenderRoot();
-
-    this.#img.src = inlineSVG(cursorBench());
-
-    root.append(this.#img, document.createElement('slot'));
-
-    this.addEventListener('click', this.#onAcquireClick);
-
-    return root;
-  }
-
-  acquireCursor(cursor: MouseCursor, x = 0): void {
-    this.#cursor = cursor;
-    (this.#cursor?.parentElement as unknown as ICursorObject)?.releaseCursor(this.#cursor);
-    // this.#cursor.action = 'sitting';
-    // this.#cursor.x = 0;
-    // this.#cursor.y = 0;
-    this.appendChild(this.#cursor);
-    this.removeEventListener('click', this.#onAcquireClick);
-    document.addEventListener('click', this.#onReleaseClick, { capture: true });
-    document.addEventListener('keydown', this.#onKeydown);
-    document.addEventListener('keyup', this.#onKeyup);
-    this.closest('cursor-park')?.updateSelfCursor({
-      action: 'sitting',
-      x,
-      y: 0,
-      parent: findCssSelector(this),
-    });
-  }
-
-  releaseCursor(_cursor: MouseCursor): void {
-    this.#cursor = null;
-    this.#animation?.cancel();
-    this.#animation = null;
-    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
-    document.removeEventListener('keydown', this.#onKeydown);
-    document.removeEventListener('keyup', this.#onKeyup);
-    this.addEventListener('click', this.#onAcquireClick);
-  }
-
-  // while someone is sitting on a bench intercept all clicks until someone clicks on the bench.
-  #onReleaseClick = (event: PointerEvent) => {
-    if (this.#cursor === null) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    if (event.target === this) {
-      const cursor = this.#cursor;
-      this.releaseCursor(this.#cursor);
-      // give control back to the park
-      this.#park?.acquireCursor(cursor);
-    }
-  };
-
-  #onAcquireClick = (event: PointerEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
-
-    if (cursor) {
-      const rect = this.getBoundingClientRect();
-      const x = clamp(0, event.pageX - (rect.x + window.scrollX), this.offsetWidth) - cursor.offsetWidth / 2;
-      this.acquireCursor(cursor, x);
-    }
-  };
-
-  #onKeydown = (event: KeyboardEvent) => {
-    if (this.#cursor === null) return;
-    if (event.code === 'ArrowLeft') {
-      event.preventDefault();
-      if (this.#cursor.x > 3) this.#animateCursor(-2);
-    } else if (event.code === 'ArrowRight') {
-      event.preventDefault();
-      if (this.#cursor.x + this.#cursor.offsetWidth <= this.offsetWidth) this.#animateCursor(2);
-    } else if (event.code === 'ArrowUp') {
-      event.preventDefault();
-      this.closest('cursor-park')?.updateSelfCursor({
-        action: 'sitting-forwards',
-      });
-    } else if (event.code === 'ArrowDown') {
-      event.preventDefault();
-      this.closest('cursor-park')?.updateSelfCursor({
-        action: 'sitting-backwards',
-      });
-    }
-  };
-
-  #onKeyup = (event: KeyboardEvent) => {
-    if (this.#cursor === null) return;
-
-    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-      this.closest('cursor-park')?.updateSelfCursor({
-        action: 'sitting',
-      });
-    }
-  };
-
-  #animateCursor(delta: number) {
-    if (this.#cursor === null) return;
-
-    this.#animation?.cancel();
-
-    const previousX = this.#cursor.x;
-    const x = previousX + delta;
-    // const direction = Math.sign(delta);
-
-    this.closest('cursor-park')?.updateSelfCursor({
-      x,
-    });
-
-    // this.#animation = new CursorAnimation(this.#cursor, 250, [
-    //   { percentage: 0, x: previousX, rotation: 0 },
-    //   { percentage: 33, x: previousX, rotation: direction * 10 },
-    //   { percentage: 66, x, rotation: direction * -7 },
-    //   { percentage: 100, x, rotation: 0 },
-    // ]);
-
-    // this.#animation.start();
-
-    // this.#animation.finished.then(() => (this.#animation = null));
-  }
-}
 
 export class CursorMat extends ReactiveElement implements ICursorObject {
   static tagName = 'cursor-mat';
@@ -249,7 +72,7 @@ export class CursorMat extends ReactiveElement implements ICursorObject {
     }
   }
 
-  acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
+  acquireCursor(cursor: MouseCursor, { x, y } = { x: 0, y: 0 }): void {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as ICursorObject)?.releaseCursor(this.#cursor);
     this.appendChild(this.#cursor);
@@ -306,7 +129,7 @@ export class CursorMat extends ReactiveElement implements ICursorObject {
     const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
 
     if (cursor) {
-      this.acquireCursor(cursor, event.pageX, event.pageY);
+      this.acquireCursor(cursor, { x: event.pageX, y: event.pageY });
     }
   };
 }
@@ -353,7 +176,7 @@ export class CursorRock extends ReactiveElement implements ICursorObject {
     return root;
   }
 
-  acquireCursor(cursor: MouseCursor, x = 0): void {
+  acquireCursor(cursor: MouseCursor, { x }: Point = { x: 0, y: 0 }): void {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as ICursorObject)?.releaseCursor(this.#cursor);
     this.appendChild(this.#cursor);
@@ -400,7 +223,7 @@ export class CursorRock extends ReactiveElement implements ICursorObject {
     const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
 
     if (cursor) {
-      this.acquireCursor(cursor, event.pageX);
+      this.acquireCursor(cursor, { x: event.pageX, y: event.pageY });
     }
   };
 }
@@ -480,7 +303,7 @@ export class CursorSign extends ReactiveElement implements ICursorObject {
     return root;
   }
 
-  acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
+  acquireCursor(cursor: MouseCursor, { x, y }: Point = { x: 0, y: 0 }): void {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as ICursorObject)?.releaseCursor(this.#cursor);
     this.appendChild(this.#cursor);
@@ -531,7 +354,7 @@ export class CursorSign extends ReactiveElement implements ICursorObject {
     const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
 
     if (cursor) {
-      this.acquireCursor(cursor, event.pageX, event.pageY);
+      this.acquireCursor(cursor, { x: event.pageX, y: event.pageY });
     }
   };
 }
@@ -615,7 +438,7 @@ export class CursorInfographic extends ReactiveElement implements ICursorObject 
     return root;
   }
 
-  acquireCursor(cursor: MouseCursor, x = 0, y = 0): void {
+  acquireCursor(cursor: MouseCursor, { x, y }: Point = { x: 0, y: 0 }): void {
     this.#cursor = cursor;
     (this.#cursor?.parentElement as unknown as ICursorObject)?.releaseCursor(this.#cursor);
     this.appendChild(this.#cursor);
@@ -665,7 +488,7 @@ export class CursorInfographic extends ReactiveElement implements ICursorObject 
     const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
 
     if (cursor) {
-      this.acquireCursor(cursor, event.pageX, event.pageY);
+      this.acquireCursor(cursor, { x: event.pageX, y: event.pageY });
     }
   };
 }
