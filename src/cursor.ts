@@ -210,7 +210,7 @@ export class MouseCursor extends ReactiveElement {
       left: 0;
       pointer-events: none;
       user-select: none;
-      z-index: calc(Infinity);
+      z-index: calc(Infinity - 1);
     }
 
     img {

@@ -55,7 +55,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
   connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener('mousemove', this.#onMouseMove);
-    window.addEventListener('beforeunload', this.#onBeforeUnload);
+    document.addEventListener('visibilitychange', this.#onVisibilityChange);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
@@ -67,9 +67,9 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#cleanup();
-    this.#onBeforeUnload();
+    this.#removeSelfCursor();
     document.removeEventListener('mousemove', this.#onMouseMove);
-    window.removeEventListener('beforeunload', this.#onBeforeUnload);
+    document.removeEventListener('visibilitychange', this.#onVisibilityChange);
   }
 
   acquireCursor(cursor: MouseCursor): void {
@@ -77,10 +77,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     if (cursor.self) {
       this.#isCursorClaimed = true;
       (cursor?.parentElement as unknown as ICursorObject)?.releaseCursor();
-      // cursor.x = this.#cursorPosition.x;
-      // cursor.y = this.#cursorPosition.y;
-      // cursor.action = 'pointing';
-      // this.#updateSelfCursorParent(this);
       this.updateSelfCursor({
         x: this.#cursorPosition.x,
         y: this.#cursorPosition.y,
@@ -90,11 +86,21 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     }
 
     this.appendChild(cursor);
+    this.removeEventListener('click', this.#onClick);
   }
 
   releaseCursor(): void {
     this.#isCursorClaimed = false;
+    this.addEventListener('click', this.#onClick);
   }
+
+  #onClick = (e: PointerEvent) => {
+    if (e.target === this) {
+      const cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+      if (cursor) this.acquireCursor(cursor);
+    }
+  };
 
   async #initializeDocument() {
     // Creating the document is async so it could cause unnecessary initialization of the document
@@ -145,8 +151,12 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
 
     this.#handle.on('change', this.#onChange);
 
+    this.#createSelfCursor();
+  }
+
+  #createSelfCursor() {
     // Create the cursor for this tab
-    this.#handle.change((doc) => {
+    this.#handle?.change((doc) => {
       doc.cursors[UUID] = {
         action: 'pointing',
         color: CURSOR_COLOR,
@@ -156,6 +166,12 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
         scale: CURSOR_SCALE,
         parent: findCssSelector(this),
       };
+    });
+  }
+
+  #removeSelfCursor() {
+    this.#handle?.change((doc) => {
+      delete doc.cursors[UUID];
     });
   }
 
@@ -218,6 +234,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
       } else if (patch.action === 'del') {
         const [_, id] = patch.path;
         const cursor = this.#cursors.get(id as string);
+        (cursor?.parentElement as unknown as ICursorObject)?.releaseCursor();
         cursor?.remove();
         this.#cursors.delete(id as string);
         this.#perfectCursors.get(id as string)?.dispose();
@@ -230,11 +247,12 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     this.#handle?.removeAllListeners();
   }
 
-  #onBeforeUnload = () => {
-    console.log('unload');
-    this.#handle?.change((doc) => {
-      delete doc.cursors[UUID];
-    });
+  #onVisibilityChange = () => {
+    if (document.hidden) {
+      this.#removeSelfCursor();
+    } else {
+      this.#createSelfCursor();
+    }
   };
 
   // always track the cursor position

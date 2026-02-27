@@ -328,7 +328,8 @@ export class CursorSign extends CursorObject {
       box-sizing: border-box;
       overflow: scroll;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
-      z-index: 2;
+      z-index: calc(Infinity);
+      pointer-events: none;
     }
   `;
   #img = document.createElement('img');
@@ -405,6 +406,7 @@ export class CursorInfographic extends CursorObject {
     }
 
     div {
+      pointer-events: none;
       text-align: center;
       opacity: 0;
       position: absolute;
@@ -417,6 +419,7 @@ export class CursorInfographic extends CursorObject {
       overflow: scroll;
       z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+      z-index: calc(Infinity);
     }
   `;
 
@@ -447,11 +450,13 @@ export class CursorInfographic extends CursorObject {
     });
 
     this.#message.style.opacity = '0.9';
+    this.#message.style.pointerEvents = 'all';
   }
 
   releaseCursor(): void {
     super.releaseCursor();
     this.#message.style.opacity = '0';
+    this.#message.style.pointerEvents = '';
   }
 }
 
