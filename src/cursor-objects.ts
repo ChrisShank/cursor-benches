@@ -14,7 +14,7 @@ export interface Point {
 
 export interface ICursorObject {
   acquireCursor(cursor: MouseCursor, point: Point): void;
-  releaseCursor(cursor: MouseCursor): void;
+  releaseCursor(): void;
 }
 
 export class CursorObject extends ReactiveElement implements ICursorObject {
@@ -39,15 +39,14 @@ export class CursorObject extends ReactiveElement implements ICursorObject {
   acquireCursor(cursor: MouseCursor, _point: Point): void {
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor();
     this.appendChild(cursor);
-    this.removeEventListener('click', this.#onAcquireClick);
-    document.addEventListener('click', this.#onReleaseClick, { capture: true });
+    // this.removeEventListener('click', this.#onAcquireClick);
+    // document.addEventListener('click', this.#onReleaseClick);
   }
 
   releaseCursor(): void {
-    console.log();
     this.#cursor = null;
-    document.removeEventListener('click', this.#onReleaseClick, { capture: true });
-    this.addEventListener('click', this.#onAcquireClick);
+    // document.removeEventListener('click', this.#onReleaseClick);
+    // this.addEventListener('click', this.#onAcquireClick);
   }
 
   #onAcquireClick = (event: PointerEvent) => {
@@ -55,29 +54,20 @@ export class CursorObject extends ReactiveElement implements ICursorObject {
     event.stopPropagation();
     event.stopImmediatePropagation();
 
-    this.#cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
-
     if (this.#cursor) {
-      // compute point of click relative to the objects bounding box (which has to account for scroll)
-      const rect = this.getBoundingClientRect();
-      const x = event.pageX - (rect.x + window.scrollX);
-      const y = event.pageY - (rect.y + window.scrollY);
-      this.acquireCursor(this.#cursor, { x, y });
-    }
-  };
-
-  #onReleaseClick = (event: PointerEvent) => {
-    if (this.#cursor === null) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    if (event.target === this) {
       const cursor = this.#cursor;
-      this.releaseCursor();
       // give control back to the park
       this.#park?.acquireCursor(cursor);
+    } else {
+      this.#cursor = document.querySelector<MouseCursor>('mouse-cursor:state(self)');
+
+      if (this.#cursor) {
+        // compute point of click relative to the objects bounding box (which has to account for scroll)
+        const rect = this.getBoundingClientRect();
+        const x = event.pageX - (rect.x + window.scrollX);
+        const y = event.pageY - (rect.y + window.scrollY);
+        this.acquireCursor(this.#cursor, { x, y });
+      }
     }
   };
 }
@@ -122,7 +112,8 @@ export class CursorBench extends CursorObject {
 
     document.addEventListener('keydown', this.#onKeydown);
     document.addEventListener('keyup', this.#onKeyup);
-    this.closest('cursor-park')?.updateSelfCursor({
+
+    this.updateCursor({
       action: 'sitting',
       // Shift the cursor over by 1/3 because the sprite is slightly bigger than it's outline.
       x: clamp(0, point.x, this.offsetWidth) - cursor.offsetWidth / 3,
@@ -149,12 +140,12 @@ export class CursorBench extends CursorObject {
       if (this.cursor.x + this.cursor.offsetWidth <= this.offsetWidth) this.#animateCursor(2);
     } else if (event.code === 'ArrowUp') {
       event.preventDefault();
-      this.closest('cursor-park')?.updateSelfCursor({
+      this.updateCursor({
         action: 'sitting-forwards',
       });
     } else if (event.code === 'ArrowDown') {
       event.preventDefault();
-      this.closest('cursor-park')?.updateSelfCursor({
+      this.updateCursor({
         action: 'sitting-backwards',
       });
     }
@@ -164,7 +155,7 @@ export class CursorBench extends CursorObject {
     if (this.cursor === null) return;
 
     if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-      this.closest('cursor-park')?.updateSelfCursor({
+      this.updateCursor({
         action: 'sitting',
       });
     }
@@ -173,7 +164,7 @@ export class CursorBench extends CursorObject {
   #animateCursor(delta: number) {
     if (this.cursor === null) return;
 
-    this.closest('cursor-park')?.updateSelfCursor({
+    this.updateCursor({
       x: this.cursor.x + delta,
     });
   }
@@ -224,7 +215,7 @@ export class CursorMat extends CursorObject {
   acquireCursor(cursor: MouseCursor, point: Point): void {
     super.acquireCursor(cursor, point);
 
-    this.closest('cursor-park')?.updateSelfCursor({
+    this.updateCursor({
       action: 'crouching',
       x: point.x,
       y: point.y,
@@ -285,7 +276,7 @@ export class CursorRock extends CursorObject {
   acquireCursor(cursor: MouseCursor, point: Point): void {
     super.acquireCursor(cursor, point);
 
-    this.closest('cursor-park')?.updateSelfCursor({
+    this.updateCursor({
       action: 'crouching',
       x: point.x,
       y: point.y,
@@ -361,7 +352,7 @@ export class CursorSign extends CursorObject {
   acquireCursor(cursor: MouseCursor, point: Point): void {
     super.acquireCursor(cursor, point);
 
-    this.closest('cursor-park')?.updateSelfCursor({
+    this.updateCursor({
       action: 'looking-up',
       x: point.x,
       y: point.y,
@@ -448,7 +439,7 @@ export class CursorInfographic extends CursorObject {
   acquireCursor(cursor: MouseCursor, point: Point): void {
     super.acquireCursor(cursor, point);
 
-    this.closest('cursor-park')?.updateSelfCursor({
+    this.updateCursor({
       action: 'looking-down',
       x: point.x,
       y: point.y,

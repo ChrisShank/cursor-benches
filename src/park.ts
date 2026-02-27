@@ -76,6 +76,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     // when the park acquires the cursor of the current tab bind the current mouse position
     if (cursor.self) {
       this.#isCursorClaimed = true;
+      (cursor?.parentElement as unknown as ICursorObject)?.releaseCursor();
       // cursor.x = this.#cursorPosition.x;
       // cursor.y = this.#cursorPosition.y;
       // cursor.action = 'pointing';
@@ -91,16 +92,9 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     this.appendChild(cursor);
   }
 
-  releaseCursor(_cursor: MouseCursor): void {
+  releaseCursor(): void {
     this.#isCursorClaimed = false;
   }
-
-  // #updateSelfCursorParent(el: HTMLElement) {
-  //   this.#handle?.change((doc) => {
-  //     console.log(findCssSelector(el));
-  //     doc.cursors[UUID].parent = findCssSelector(el);
-  //   });
-  // }
 
   async #initializeDocument() {
     // Creating the document is async so it could cause unnecessary initialization of the document

@@ -199,79 +199,6 @@ export const cursorLookingDown = (
 
 `;
 
-export interface CursorKeyFrame {
-  percentage: number;
-  x?: number;
-  y?: number;
-  rotation?: number;
-}
-
-interface ComputedCursorKeyFrame {
-  timeDiff: number;
-  x: number | undefined;
-  y: number | undefined;
-  rotation: number | undefined;
-}
-
-export class CursorAnimation {
-  #cursor;
-  #index = 0;
-  #keyframes: ComputedCursorKeyFrame[];
-  #currentKeyFrame: ComputedCursorKeyFrame | undefined;
-  #isPending = false;
-  #timeout = -1;
-  #promise = Promise.withResolvers<void>();
-
-  get pending() {
-    return this.#isPending;
-  }
-
-  get finished() {
-    return this.#promise.promise;
-  }
-
-  constructor(cursor: MouseCursor, duration: number, keyframes: CursorKeyFrame[]) {
-    this.#cursor = cursor;
-    let previousTime = 0;
-    this.#keyframes = keyframes.map(({ percentage, x, y, rotation }) => {
-      const time = (duration * percentage) / 100;
-      const timeDiff = time - previousTime;
-      previousTime = time;
-      return { timeDiff, x, y, rotation };
-    });
-  }
-
-  start() {
-    this.#isPending = true;
-    this.#executeKeyFrame();
-  }
-
-  cancel() {
-    this.#isPending = false;
-    clearTimeout(this.#timeout);
-    this.#promise.resolve();
-  }
-
-  #executeKeyFrame = () => {
-    // commit the current keyframe values
-    if (this.#currentKeyFrame !== undefined) {
-      if (this.#currentKeyFrame.x !== undefined) this.#cursor.style.left = this.#currentKeyFrame.x + 'px';
-      if (this.#currentKeyFrame.y !== undefined) this.#cursor.style.top = this.#currentKeyFrame.y + 'px';
-      if (this.#currentKeyFrame.rotation !== undefined) this.#cursor.style.rotate = this.#currentKeyFrame.rotation + 'deg';
-    }
-
-    // check if there is another keyframe
-    this.#currentKeyFrame = this.#keyframes[this.#index];
-    if (this.#currentKeyFrame === undefined) {
-      this.#promise.resolve();
-    } else {
-      // increment index for next time
-      this.#index += 1;
-      this.#timeout = setTimeout(this.#executeKeyFrame, this.#currentKeyFrame.timeDiff);
-    }
-  };
-}
-
 export class MouseCursor extends ReactiveElement {
   static tagName = 'mouse-cursor';
 
@@ -320,7 +247,7 @@ export class MouseCursor extends ReactiveElement {
   }
 
   #internals = this.attachInternals();
-  #animation: CursorAnimation | null = null;
+  #animation: Animation | null = null;
   #img = document.createElement('img');
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
@@ -340,24 +267,38 @@ export class MouseCursor extends ReactiveElement {
 
     if (changedProperties.has('x')) {
       // Temporary place to animate bench interactions
+      const previousAction = changedProperties.get('action');
       if (
-        changedProperties.get('action') !== 'pointing' &&
-        (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards')
+        previousAction === undefined ||
+        (previousAction.includes('sitting') &&
+          (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards'))
       ) {
         this.#animation?.cancel();
-        const previousX = changedProperties.get('x') || 0;
+
         const x = this.x;
+        const previousX = changedProperties.get('x') || 0;
         const direction = Math.sign(x - previousX);
-        this.#animation = new CursorAnimation(this, 200, [
-          { percentage: 0, x: previousX, rotation: 0 },
-          { percentage: 33, x: previousX, rotation: direction * 10 },
-          { percentage: 66, x, rotation: direction * -7 },
-          { percentage: 100, x, rotation: 0 },
-        ]);
 
-        this.#animation.start();
+        this.#animation = this.animate(
+          [
+            { left: previousX + 'px', rotate: '0deg' },
+            { left: previousX + 'px', rotate: direction * 7 + 'deg' },
+            { left: x + 'px', rotate: direction * -5 + 'deg' },
+            { left: x + 'px', rotate: '0deg' },
+          ],
+          {
+            duration: 250,
+            fill: 'forwards',
+          },
+        );
 
-        this.#animation.finished.then(() => (this.#animation = null));
+        this.#animation.finished
+          .then(() => {
+            this.#animation?.commitStyles();
+            this.#animation?.cancel();
+            this.#animation = null;
+          })
+          .catch(() => {});
       } else {
         this.style.left = this.x + 'px';
       }
