@@ -12,6 +12,7 @@ import {
   movieScreen,
   parkInfographic,
   parkSign,
+  library,
 } from './sprites';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import type { CursorItem } from './park';
@@ -467,6 +468,111 @@ export class CursorInfographic extends CursorObject {
     super.releaseCursor();
     this.#message.style.opacity = '0';
     this.#message.style.pointerEvents = '';
+  }
+}
+
+export class CursorLibrary extends CursorObject {
+  static tagName = 'cursor-library';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      /* 20 x 38 */
+      aspect-ratio: 0.53;
+      height: 80px;
+      user-select: none;
+    }
+
+    click-zone {
+      display: block;
+      position: absolute;
+      height: 100%;
+      width: 150%;
+      top: -25%;
+      right: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+
+    ::slotted(mouse-cursor) {
+      translate: -50% 0%;
+    }
+
+    div {
+      pointer-events: none;
+      text-align: center;
+      opacity: 0;
+      position: absolute;
+      top: -85%;
+      bottom: -85%;
+      left: 110%;
+      background: #deeade;
+      padding: 0 0.5rem;
+      border-radius: 4px;
+      transition: opacity 200ms ease-out;
+      box-sizing: border-box;
+      overflow: scroll;
+      z-index: 2;
+      box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+      z-index: calc(Infinity);
+      padding: 12px 48px 4px 12px;
+    }
+
+    div ::slotted(ul) {
+      display: flex !important;
+      gap: 2px;
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      align-items: flex-end;
+      height: 100%;
+    }
+  `;
+
+  #img = document.createElement('img');
+  #books = document.createElement('div');
+  #clickZone = document.createElement('click-zone');
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    const slot = document.createElement('slot');
+    slot.name = 'books';
+    this.#books.appendChild(slot);
+    this.#books.addEventListener('click', (e) => e.stopPropagation());
+
+    this.#img.src = inlineSVG(library());
+
+    root.append(document.createElement('slot'), this.#clickZone, this.#img, this.#books);
+
+    return root;
+  }
+
+  acquireCursor(cursor: MouseCursor, point: Point): void {
+    super.acquireCursor(cursor, point);
+
+    this.updateCursor({
+      action: 'looking-down',
+      x: point.x,
+      y: point.y,
+      parent: findCssSelector(this),
+    });
+
+    this.#books.style.opacity = '0.9';
+    this.#books.style.pointerEvents = 'all';
+  }
+
+  releaseCursor(): void {
+    super.releaseCursor();
+    this.#books.style.opacity = '0';
+    this.#books.style.pointerEvents = '';
   }
 }
 

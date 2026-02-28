@@ -5,6 +5,7 @@ import {
   CursorBench,
   CursorGrass,
   CursorInfographic,
+  CursorLibrary,
   CursorMailbox,
   CursorMat,
   CursorPath,
@@ -43,6 +44,7 @@ declare global {
     'cursor-tree': CursorTree;
     'cursor-rock': CursorRock;
     'cursor-mailbox': CursorMailbox;
+    'cursor-library': CursorLibrary;
   }
 }
 
@@ -58,3 +60,4 @@ CursorPath.define();
 CursorTree.define();
 CursorRock.define();
 CursorMailbox.define();
+CursorLibrary.define();
