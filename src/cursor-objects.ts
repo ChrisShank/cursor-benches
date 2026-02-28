@@ -1,7 +1,18 @@
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import type { MouseCursor } from './cursor';
 import { clamp, convertSVGIntoCssURL, inlineSVG } from './utils';
-import { cursorBench, cursorMat, cursorPath, cursorRocks, cursorTree, grass, movieScreen, parkInfographic, parkSign } from './sprites';
+import {
+  cursorBench,
+  cursorMat,
+  cursorPath,
+  cursorRocks,
+  cursorTree,
+  grass,
+  cursorMailbox,
+  movieScreen,
+  parkInfographic,
+  parkSign,
+} from './sprites';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import type { CursorItem } from './park';
 import 'youtube-video-element';
@@ -18,12 +29,15 @@ export interface ICursorObject {
 }
 
 export class CursorObject extends ReactiveElement implements ICursorObject {
-  #park = this.closest('cursor-park');
-
   #cursor: MouseCursor | null = null;
+  #park = this.closest('cursor-park');
 
   get cursor() {
     return this.#cursor;
+  }
+
+  get park() {
+    return this.#park;
   }
 
   constructor() {
@@ -39,14 +53,10 @@ export class CursorObject extends ReactiveElement implements ICursorObject {
   acquireCursor(cursor: MouseCursor, _point: Point): void {
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor();
     this.appendChild(cursor);
-    // this.removeEventListener('click', this.#onAcquireClick);
-    // document.addEventListener('click', this.#onReleaseClick);
   }
 
   releaseCursor(): void {
     this.#cursor = null;
-    // document.removeEventListener('click', this.#onReleaseClick);
-    // this.addEventListener('click', this.#onAcquireClick);
   }
 
   #onAcquireClick = (event: PointerEvent) => {
@@ -458,6 +468,145 @@ export class CursorInfographic extends CursorObject {
     this.#message.style.opacity = '0';
     this.#message.style.pointerEvents = '';
   }
+}
+
+export class CursorMailbox extends CursorObject {
+  static tagName = 'cursor-mailbox';
+
+  static styles = css`
+    :host {
+      display: block;
+      position: relative;
+      /* 103 x 164 */
+      aspect-ratio: 0.63;
+      height: 60px;
+      user-select: none;
+    }
+
+    click-zone {
+      display: block;
+      position: absolute;
+      height: 100%;
+      width: 150%;
+      top: -25%;
+      right: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    img {
+      height: 100%;
+      width: 100%;
+    }
+
+    ::slotted(mouse-cursor) {
+      translate: -50% 0%;
+    }
+
+    form {
+      pointer-events: none;
+      text-align: center;
+      opacity: 0;
+      position: absolute;
+      bottom: 125%;
+      left: -100px;
+      width: 200px;
+      aspect-ratio: 6/4;
+      background: #deeade;
+      padding: 0 0.5rem;
+      border-radius: 4px;
+      transition: opacity 200ms ease-out;
+      box-sizing: border-box;
+      overflow: scroll;
+      z-index: 2;
+      box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+      z-index: calc(Infinity);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      gap: 0.25rem;
+
+      label {
+        text-align: center;
+      }
+
+      textarea {
+        flex-grow: 1;
+        resize: none;
+        background: transparent;
+        border: unset;
+      }
+
+      button {
+        align-self: flex-end;
+      }
+    }
+  `;
+
+  #img = document.createElement('img');
+  #form = document.createElement('form');
+  #clickZone = document.createElement('click-zone');
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.#form.action = 'https://docs.google.com/forms/u/0/d/169qksxua_-nPsYOyKmZ6xQh0Gv1wmHopEnxF71K0e-g/formResponse';
+    this.#form.addEventListener('click', (e) => e.stopPropagation());
+    this.#form.addEventListener('submit', this.#onSubmit);
+    this.#form.setHTMLUnsafe(`
+      <label for="message">Write a postcard!</label>
+      <textarea id="message" name="entry.379819885"></textarea>
+      <button>Send Mail</button>
+    `);
+
+    this.#img.src = inlineSVG(cursorMailbox());
+
+    root.append(document.createElement('slot'), this.#clickZone, this.#img, this.#form);
+
+    return root;
+  }
+
+  acquireCursor(cursor: MouseCursor, point: Point): void {
+    super.acquireCursor(cursor, point);
+
+    this.updateCursor({
+      action: 'standing',
+      x: point.x,
+      y: point.y,
+      parent: findCssSelector(this),
+    });
+
+    this.#form.style.opacity = '1';
+    this.#form.style.pointerEvents = 'all';
+  }
+
+  releaseCursor(): void {
+    super.releaseCursor();
+    this.#form.style.opacity = '0';
+    this.#form.style.pointerEvents = '';
+  }
+
+  #onSubmit = async (event: SubmitEvent) => {
+    event.preventDefault();
+
+    try {
+      const url = new URL(this.#form.action);
+      url.search = new URLSearchParams(new FormData(this.#form) as any).toString();
+
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+    } finally {
+      this.#form.reset();
+      this.park?.acquireCursor(this.cursor!);
+    }
+  };
 }
 
 /* INERT OBJECTS */
