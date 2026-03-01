@@ -3,6 +3,7 @@ import { pointingCursor, MouseCursor } from './cursor';
 import { CursorPark } from './park';
 import {
   CursorBench,
+  CursorBush,
   CursorGrass,
   CursorInfographic,
   CursorLibrary,
@@ -45,6 +46,7 @@ declare global {
     'cursor-rock': CursorRock;
     'cursor-mailbox': CursorMailbox;
     'cursor-library': CursorLibrary;
+    'cursor-bush': CursorBush;
   }
 }
 
@@ -61,3 +63,4 @@ CursorTree.define();
 CursorRock.define();
 CursorMailbox.define();
 CursorLibrary.define();
+CursorBush.define();

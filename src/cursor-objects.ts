@@ -1,7 +1,18 @@
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import type { MouseCursor } from './cursor';
 import { clamp, convertSVGIntoCssURL, inlineSVG } from './utils';
-import { cursorPath, cursorRocks, cursorTree, grass, cursorMailbox, movieScreen, parkInfographic, parkSign, library } from './sprites';
+import {
+  cursorPath,
+  cursorRocks,
+  cursorTree,
+  grass,
+  cursorMailbox,
+  movieScreen,
+  parkInfographic,
+  parkSign,
+  library,
+  bush,
+} from './sprites';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import type { CursorItem } from './park';
 import 'youtube-video-element';
@@ -797,7 +808,7 @@ export class CursorGrass extends ReactiveElement {
   static styles = css`
     :host {
       display: block;
-      width: 10px;
+      width: 15px;
       aspect-ratio: 1.5;
       user-select: none;
       background-image: ${unsafeCSS(convertSVGIntoCssURL(grass()))};
@@ -832,6 +843,22 @@ export class CursorTree extends ReactiveElement {
       width: 150px;
       aspect-ratio: 0.68;
       background-image: ${unsafeCSS(convertSVGIntoCssURL(cursorTree()))};
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+  `;
+}
+
+export class CursorBush extends ReactiveElement {
+  static tagName = 'cursor-bush';
+
+  static styles = css`
+    :host {
+      display: block;
+      user-select: none;
+      width: 70px;
+      aspect-ratio: 1.6;
+      background-image: ${unsafeCSS(convertSVGIntoCssURL(bush()))};
       background-size: contain;
       background-repeat: no-repeat;
     }
