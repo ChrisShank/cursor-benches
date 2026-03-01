@@ -255,6 +255,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     if (document.hidden) {
       this.#removeSelfCursor();
     } else {
+      console.log('cursor shouldnt exist', document.querySelector('mouse-cursor:state(self)'));
       this.#createSelfCursor();
     }
   };

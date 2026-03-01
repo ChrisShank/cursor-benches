@@ -342,7 +342,10 @@ export class CursorSign extends CursorObject {
       text-align: center;
       opacity: 0;
       position: absolute;
-      inset: -10% -250% -10% 110%;
+      left: 110%;
+      top: 50%;
+      translate: 0 -50%;
+      width: 175px;
       background: #deeade;
       padding: 0 0.5rem;
       border-radius: 4px;
@@ -432,7 +435,10 @@ export class CursorInfographic extends CursorObject {
       text-align: center;
       opacity: 0;
       position: absolute;
-      inset: -100% -500% -100% 110%;
+      left: 110%;
+      top: 50%;
+      translate: 0 -50%;
+      width: 350px;
       background: #deeade;
       padding: 0 0.5rem;
       border-radius: 4px;
@@ -442,6 +448,7 @@ export class CursorInfographic extends CursorObject {
       z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
+      padding: 5px;
     }
   `;
 
@@ -451,6 +458,7 @@ export class CursorInfographic extends CursorObject {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
+    this.#message.part.add('message');
     const slot = document.createElement('slot');
     slot.name = 'message';
     this.#message.appendChild(slot);
@@ -637,7 +645,6 @@ export class CursorMailbox extends CursorObject {
       transition: opacity 200ms ease-out;
       box-sizing: border-box;
       overflow: scroll;
-      z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
       display: flex;
@@ -697,6 +704,7 @@ export class CursorMailbox extends CursorObject {
 
     this.#form.style.opacity = '1';
     this.#form.style.pointerEvents = 'all';
+    this.#form.querySelector('textarea')?.focus();
   }
 
   releaseCursor(): void {

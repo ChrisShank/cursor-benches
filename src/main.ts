@@ -6,7 +6,7 @@ import './index.ts';
 //   (e) => {
 //     e.preventDefault();
 //     e.stopPropagation();
-//     const bush = document.createElement('cursor-grass');
+//     const bush = document.createElement('cursor-bush');
 //     bush.style.top = e.pageY + 'px';
 //     bush.style.left = e.pageX + 'px';
 //     park.appendChild(bush);
