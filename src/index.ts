@@ -4,6 +4,7 @@ import { CursorPark } from './park';
 import {
   CursorBench,
   CursorBush,
+  CursorFlowers,
   CursorGrass,
   CursorInfographic,
   CursorLibrary,
@@ -47,6 +48,7 @@ declare global {
     'cursor-mailbox': CursorMailbox;
     'cursor-library': CursorLibrary;
     'cursor-bush': CursorBush;
+    'cursor-flowers': CursorFlowers;
   }
 }
 
@@ -64,3 +66,4 @@ CursorRock.define();
 CursorMailbox.define();
 CursorLibrary.define();
 CursorBush.define();
+CursorFlowers.define();

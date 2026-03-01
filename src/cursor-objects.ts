@@ -872,3 +872,19 @@ export class CursorBush extends ReactiveElement {
     }
   `;
 }
+
+export class CursorFlowers extends ReactiveElement {
+  static tagName = 'cursor-flowers';
+
+  static styles = css`
+    :host {
+      display: block;
+      user-select: none;
+      width: 70px;
+      aspect-ratio: 1.6;
+      background-image: url('/flowers.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+  `;
+}
