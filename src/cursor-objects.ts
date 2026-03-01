@@ -637,7 +637,7 @@ export class CursorMailbox extends CursorObject {
       position: absolute;
       bottom: 125%;
       left: -100px;
-      width: 200px;
+      width: 300px;
       aspect-ratio: 6/4;
       background: #deeade;
       padding: 0 0.5rem;
@@ -649,7 +649,7 @@ export class CursorMailbox extends CursorObject {
       z-index: calc(Infinity);
       display: flex;
       flex-direction: column;
-      padding: 0;
+      padding: 7px;
       gap: 0.25rem;
 
       label {
@@ -680,7 +680,7 @@ export class CursorMailbox extends CursorObject {
     this.#form.addEventListener('click', (e) => e.stopPropagation());
     this.#form.addEventListener('submit', this.#onSubmit);
     this.#form.setHTMLUnsafe(`
-      <label for="message">Write a postcard!</label>
+      <label for="message">Write a postcard about your experience!</label>
       <textarea id="message" name="entry.379819885"></textarea>
       <button>Send Mail</button>
     `);
