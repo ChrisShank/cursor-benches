@@ -1,19 +1,7 @@
 import { ReactiveElement, css, property, unsafeCSS, type PropertyValues } from '@folkjs/dom/ReactiveElement';
 import type { MouseCursor } from './cursor';
 import { clamp, convertSVGIntoCssURL, inlineSVG } from './utils';
-import {
-  cursorBench,
-  cursorMat,
-  cursorPath,
-  cursorRocks,
-  cursorTree,
-  grass,
-  cursorMailbox,
-  movieScreen,
-  parkInfographic,
-  parkSign,
-  library,
-} from './sprites';
+import { cursorPath, cursorRocks, cursorTree, grass, cursorMailbox, movieScreen, parkInfographic, parkSign, library } from './sprites';
 import { findCssSelector } from '@folkjs/dom/css-selector';
 import type { CursorItem } from './park';
 import 'youtube-video-element';
@@ -52,6 +40,7 @@ export class CursorObject extends ReactiveElement implements ICursorObject {
   }
 
   acquireCursor(cursor: MouseCursor, _point: Point): void {
+    console.log('acquire', cursor);
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor();
     this.appendChild(cursor);
   }
@@ -111,7 +100,7 @@ export class CursorBench extends CursorObject {
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    this.#img.src = inlineSVG(cursorBench());
+    this.#img.src = '/bench.png';
 
     root.append(this.#img, document.createElement('slot'));
 
@@ -219,7 +208,18 @@ export class CursorMat extends CursorObject {
     super.update(changedProperties);
 
     if (changedProperties.has('type')) {
-      this.#mat.src = inlineSVG(cursorMat(this.type));
+      this.#mat.src = this.#matURL();
+    }
+  }
+
+  #matURL() {
+    switch (this.type) {
+      case 'serape':
+        return '/serape-mat.png';
+      case 'quilt':
+        return '/quilt-mat.png';
+      default:
+        return '/picnic-mat.png';
     }
   }
 

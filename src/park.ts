@@ -183,6 +183,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
 
         // Create Cursor
         if (key === undefined) {
+          console.log('create cursor', id);
           const cursor = document.createElement('mouse-cursor');
           cursor.id = id as string;
           this.#cursors.set(id as string, cursor);
@@ -232,9 +233,11 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
           }
         }
       } else if (patch.action === 'del') {
+        console.log('del');
         const [_, id] = patch.path;
         const cursor = this.#cursors.get(id as string);
         (cursor?.parentElement as unknown as ICursorObject)?.releaseCursor();
+        this.addEventListener('click', this.#onClick);
         cursor?.remove();
         this.#cursors.delete(id as string);
         this.#perfectCursors.get(id as string)?.dispose();
@@ -248,6 +251,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
   }
 
   #onVisibilityChange = () => {
+    console.log('visbility change', !document.hidden);
     if (document.hidden) {
       this.#removeSelfCursor();
     } else {
