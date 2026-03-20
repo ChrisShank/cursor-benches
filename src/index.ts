@@ -21,10 +21,10 @@ import {
 const globalStyles = new CSSStyleSheet();
 
 globalStyles.replaceSync(`
-  cursor-park {
+  body {
     cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51', CURSOR_SCALE))}, auto;
     
-    &:has(> mouse-cursor:state(self)) {
+    &:has(cursor-park > mouse-cursor:state(self)) {
       cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR, CURSOR_SCALE))}, auto;
     }
   }
