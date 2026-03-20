@@ -777,6 +777,13 @@ export class MovieScreen extends ReactiveElement {
     }
   `;
 
+  #timeout = -1;
+  #movieIndex = 0;
+  #schedule = [
+    { url: 'https://www.youtube.com/watch?v=WeyLEe1T0yo', start: 0, end: 4 },
+    { url: 'https://www.youtube.com/watch?v=uOeUaXZ6yJ4', start: 20, end: 25 },
+    { url: 'https://www.youtube.com/watch?v=KB8RWULtiQc', start: 40, end: 43 },
+  ];
   #img = document.createElement('img');
   #player = document.createElement('youtube-video') as CustomVideoElement;
 
@@ -785,22 +792,61 @@ export class MovieScreen extends ReactiveElement {
 
     this.#player.volume = 0;
     this.#player.controls = false;
-    this.#player.src = 'https://www.youtube.com/watch?v=WeyLEe1T0yo';
+    this.#player.style.display = 'none';
     this.#player.addEventListener('ended', this.#onFinish);
-    setTimeout(() => {
-      this.#player.play();
-    }, 5000);
-
     this.#img.src = inlineSVG(movieScreen());
+    this.#scheduleNextMovie();
 
     root.append(this.#img, this.#player);
 
     return root;
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this.#timeout);
+  }
+
+  #onStart = (time = 0) => {
+    console.log('start', this.#schedule[this.#movieIndex], time);
+    this.#player.style.display = '';
+    this.#player.src = this.#schedule[this.#movieIndex].url;
+    this.#player.currentTime = time;
+    this.#player.play();
+  };
+
   #onFinish = () => {
     this.#player.style.display = 'none';
+    setTimeout(() => this.#scheduleNextMovie(), 10 * 1000);
   };
+
+  #scheduleNextMovie() {
+    const date = new Date();
+    const minutes = date.getMinutes(); // 15
+    const seconds = date.getSeconds(); // 30
+
+    for (let i = 0; i < this.#schedule.length; i++) {
+      const movie = this.#schedule[i];
+
+      // playing now
+      if (minutes >= movie.start && minutes < movie.end) {
+        this.#movieIndex = i;
+        // console.log('playing', (minutes - movie.start) * 60 + seconds);
+        this.#onStart((minutes - movie.start) * 60 + seconds);
+        break;
+      }
+
+      // on deck
+      const previousMovie = this.#schedule.at(i - 1)!;
+      const start = movie.start === 0 ? 60 : movie.start;
+      if (minutes > previousMovie.end && minutes < start) {
+        this.#movieIndex = i;
+        // console.log('scheduled', (start - minutes) * 60 - seconds);
+        this.#timeout = setTimeout(this.#onStart, ((start - minutes) * 60 - seconds) * 1000);
+        break;
+      }
+    }
+  }
 
   get volume() {
     return this.#player.volume;
