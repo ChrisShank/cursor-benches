@@ -16,17 +16,3 @@ function promptInstruction() {
 }
 
 setTimeout(promptInstruction, 300);
-
-// const park = document.querySelector('cursor-park')!;
-// document.addEventListener(
-//   'dblclick',
-//   (e) => {
-//     e.preventDefault();
-//     e.stopPropagation();
-//     const bush = document.createElement('cursor-flowers');
-//     bush.style.top = e.pageY + 'px';
-//     bush.style.left = e.pageX + 'px';
-//     park.appendChild(bush);
-//   },
-//   { capture: true },
-// );
