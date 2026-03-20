@@ -269,9 +269,8 @@ export class MouseCursor extends ReactiveElement {
       // Temporary place to animate bench interactions
       const previousAction = changedProperties.get('action');
       if (
-        previousAction === undefined ||
-        (previousAction.includes('sitting') &&
-          (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards'))
+        (previousAction === undefined || previousAction.includes('sitting')) &&
+        (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards')
       ) {
         this.#animation?.cancel();
 

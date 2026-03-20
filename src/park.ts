@@ -16,6 +16,7 @@ export interface CursorItem {
   y: number;
   scale: number;
   parent: string;
+  lastUpdate: number;
 }
 
 interface CursorDoc {
@@ -115,10 +116,13 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
         this.#handle = await this.#repo.find<CursorDoc>(this.src);
         await this.#handle.whenReady();
         const doc = this.#handle.doc();
-
+        console.log(Object.keys(doc.cursors));
         // Create cursors that already exist
         for (const id of Object.keys(doc.cursors)) {
           const data = doc.cursors[id];
+
+          if (Date.now() - data.lastUpdate > 5 * 1000 * 60) continue;
+
           const cursor = document.createElement('mouse-cursor');
           cursor.id = id as string;
           cursor.action = data.action;
@@ -126,6 +130,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
           cursor.rotation = data.rotation;
           cursor.x = data.x;
           cursor.y = data.y;
+          cursor.scale = data.scale;
           this.#cursors.set(id as string, cursor);
           const newParent = document.querySelector(data.parent);
           if (newParent) {
@@ -165,6 +170,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
         y: this.#cursorPosition.y,
         scale: CURSOR_SCALE,
         parent: findCssSelector(this),
+        lastUpdate: Date.now(),
       };
     });
   }
@@ -183,7 +189,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
 
         // Create Cursor
         if (key === undefined) {
-          console.log('create cursor', id);
           const cursor = document.createElement('mouse-cursor');
           cursor.id = id as string;
           this.#cursors.set(id as string, cursor);
@@ -233,7 +238,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
           }
         }
       } else if (patch.action === 'del') {
-        console.log('del');
+        console.log('del', Object.keys(doc.cursors));
         const [_, id] = patch.path;
         const cursor = this.#cursors.get(id as string);
         (cursor?.parentElement as unknown as ICursorObject)?.releaseCursor();
@@ -251,7 +256,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
   }
 
   #onVisibilityChange = () => {
-    console.log('visbility change', !document.hidden);
+    console.log('visible change', document.hidden);
     if (document.hidden) {
       this.#removeSelfCursor();
     } else {
@@ -288,6 +293,8 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
       if (color !== undefined) cursorData.color = color;
       if (rotation !== undefined) cursorData.rotation = rotation;
       if (scale !== undefined) cursorData.scale = scale;
+
+      cursorData.lastUpdate = Date.now();
     });
   }
 }

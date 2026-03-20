@@ -51,7 +51,6 @@ export class CursorObject extends ReactiveElement implements ICursorObject {
   }
 
   acquireCursor(cursor: MouseCursor, _point: Point): void {
-    console.log('acquire', cursor);
     (this.#cursor?.parentElement as unknown as CursorObject)?.releaseCursor();
     this.appendChild(cursor);
   }
