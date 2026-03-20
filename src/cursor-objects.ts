@@ -461,6 +461,7 @@ export class CursorInfographic extends CursorObject {
     const slot = document.createElement('slot');
     slot.name = 'message';
     this.#message.appendChild(slot);
+    this.#message.addEventListener('click', (e) => e.stopPropagation());
     this.#img.src = inlineSVG(parkInfographic());
 
     root.append(document.createElement('slot'), this.#clickZone, this.#img, this.#message);

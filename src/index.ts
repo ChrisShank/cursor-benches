@@ -21,11 +21,11 @@ import {
 const globalStyles = new CSSStyleSheet();
 
 globalStyles.replaceSync(`
-  body {
-    cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR, CURSOR_SCALE))}, auto;
-
-    &:not(:has(cursor-park > mouse-cursor:state(self))) {
-      cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51', CURSOR_SCALE))}, auto;
+  cursor-park {
+    cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR + '51', CURSOR_SCALE))}, auto;
+    
+    &:has(> mouse-cursor:state(self)) {
+      cursor: ${convertSVGIntoCssURL(pointingCursor(CURSOR_COLOR, CURSOR_SCALE))}, auto;
     }
   }
 `);
