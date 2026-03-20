@@ -57,6 +57,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     super.connectedCallback();
     document.addEventListener('mousemove', this.#onMouseMove);
     document.addEventListener('visibilitychange', this.#onVisibilityChange);
+    window.addEventListener('beforeunload', this.#removeSelfCursor);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
@@ -71,6 +72,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     this.#removeSelfCursor();
     document.removeEventListener('mousemove', this.#onMouseMove);
     document.removeEventListener('visibilitychange', this.#onVisibilityChange);
+    window.removeEventListener('beforeunload', this.#removeSelfCursor);
   }
 
   acquireCursor(cursor: MouseCursor): void {
@@ -175,11 +177,13 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     });
   }
 
-  #removeSelfCursor() {
+  #removeSelfCursor = () => {
     this.#handle?.change((doc) => {
+      // could be the case that this is called twice
+      if (doc.cursors[UUID] === undefined) return;
       delete doc.cursors[UUID];
     });
-  }
+  };
 
   #onChange = ({ doc, patches }: DocHandleChangePayload<CursorDoc>) => {
     // console.log(patches);
@@ -256,7 +260,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
   }
 
   #onVisibilityChange = () => {
-    console.log('visible change', document.hidden);
     if (document.hidden) {
       this.#removeSelfCursor();
     } else {
