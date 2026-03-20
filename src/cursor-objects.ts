@@ -808,7 +808,6 @@ export class MovieScreen extends ReactiveElement {
   }
 
   #onStart = (time = 0) => {
-    console.log('start', this.#schedule[this.#movieIndex], time);
     this.#player.style.display = '';
     this.#player.src = this.#schedule[this.#movieIndex].url;
     this.#player.currentTime = time;

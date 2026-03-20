@@ -110,8 +110,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
 
     this.#cleanup();
 
-    console.log('init doc');
-
     if (this.src && isValidAutomergeUrl(this.src)) {
       try {
         this.#handle = await this.#repo.find<CursorDoc>(this.src);
