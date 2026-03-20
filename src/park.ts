@@ -11,7 +11,6 @@ PerfectCursor.MAX_INTERVAL = 100;
 export interface CursorItem {
   action: string;
   color: string;
-  rotation: number;
   x: number;
   y: number;
   scale: number;
@@ -118,7 +117,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
         this.#handle = await this.#repo.find<CursorDoc>(this.src);
         await this.#handle.whenReady();
         const doc = this.#handle.doc();
-        console.log(Object.keys(doc.cursors));
+
         // Create cursors that already exist
         for (const id of Object.keys(doc.cursors)) {
           const data = doc.cursors[id];
@@ -129,7 +128,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
           cursor.id = id as string;
           cursor.action = data.action;
           cursor.color = data.color;
-          cursor.rotation = data.rotation;
           cursor.x = data.x;
           cursor.y = data.y;
           cursor.scale = data.scale;
@@ -167,7 +165,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
       doc.cursors[UUID] = {
         action: 'pointing',
         color: CURSOR_COLOR,
-        rotation: 0,
         x: this.#cursorPosition.x,
         y: this.#cursorPosition.y,
         scale: CURSOR_SCALE,
@@ -222,7 +219,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
             }
           } else if ((key === 'x' || key === 'y') && !cursor.self && data.action === 'pointing') {
             this.#perfectCursors.get(id as string)?.addPoint([data.x, data.y]);
-          } else if (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale') {
+          } else if (key === 'action' || key === 'color' || key === 'x' || key === 'y' || key === 'scale') {
             cursor[key] = patch.value as never;
           }
         }
@@ -233,7 +230,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
 
         if (cursor === undefined) return;
         // ignore changes to id property.
-        if (key === 'action' || key === 'color' || key === 'rotation' || key === 'x' || key === 'y' || key === 'scale') {
+        if (key === 'action' || key === 'color' || key === 'x' || key === 'y' || key === 'scale') {
           cursor[key] = patch.value as never;
         } else if (key === 'parent' && typeof patch.value === 'string' && patch.value !== '') {
           const newParent = document.querySelector(patch.value);
@@ -242,7 +239,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
           }
         }
       } else if (patch.action === 'del') {
-        console.log('del', Object.keys(doc.cursors));
         const [_, id] = patch.path;
         const cursor = this.#cursors.get(id as string);
         (cursor?.parentElement as unknown as ICursorObject)?.releaseCursor();
@@ -263,7 +259,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     if (document.hidden) {
       this.#removeSelfCursor();
     } else {
-      console.log('cursor shouldnt exist', document.querySelector('mouse-cursor:state(self)'));
       this.#createSelfCursor();
     }
   };
@@ -283,7 +278,7 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
     this.#cursorPosition.y = event.pageY;
   };
 
-  updateSelfCursor({ x, y, action, color, rotation, scale, parent }: Partial<CursorItem>) {
+  updateSelfCursor({ x, y, action, color, scale, parent }: Partial<CursorItem>) {
     const cursor = this.#cursors.get(UUID);
     if (cursor === undefined) return;
 
@@ -294,7 +289,6 @@ export class CursorPark extends ReactiveElement implements ICursorObject {
       if (x !== undefined) cursorData.x = x;
       if (y !== undefined) cursorData.y = y;
       if (color !== undefined) cursorData.color = color;
-      if (rotation !== undefined) cursorData.rotation = rotation;
       if (scale !== undefined) cursorData.scale = scale;
 
       cursorData.lastUpdate = Date.now();

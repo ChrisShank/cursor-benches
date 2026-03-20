@@ -234,8 +234,6 @@ export class MouseCursor extends ReactiveElement {
 
   @property({ type: Number, reflect: true }) y = 0;
 
-  @property({ type: Number, reflect: true }) rotation = 0;
-
   @property({ type: Number, reflect: true }) scale = 1.75;
 
   @property({ type: String, reflect: true }) color = 'black';
@@ -267,15 +265,15 @@ export class MouseCursor extends ReactiveElement {
 
     if (changedProperties.has('x')) {
       // Temporary place to animate bench interactions
+      const x = this.x;
+      const previousX = changedProperties.get('x') || 0;
+      const delta = Math.abs(x - previousX);
       const previousAction = changedProperties.get('action');
-      if (
-        (previousAction === undefined || previousAction.includes('sitting')) &&
-        (this.action === 'sitting' || this.action === 'sitting-backwards' || this.action === 'sitting-forwards')
-      ) {
+      if ((previousAction === undefined || previousAction.includes('sitting')) && this.action.includes('sitting') && delta <= 2.1) {
+        this.#animation?.commitStyles();
         this.#animation?.cancel();
+        this.style.rotate = '';
 
-        const x = this.x;
-        const previousX = changedProperties.get('x') || 0;
         const direction = Math.sign(x - previousX);
 
         this.#animation = this.animate(
@@ -307,13 +305,10 @@ export class MouseCursor extends ReactiveElement {
       this.style.top = this.y + 'px';
     }
 
-    if (changedProperties.has('rotation')) {
-      this.style.rotate = this.rotation + 'deg';
-    }
-
     if (changedProperties.has('action') || changedProperties.has('scale') || changedProperties.has('color')) {
-      this.#animation?.cancel();
-      this.#animation = null;
+      if (this.#animation && !this.action.includes('sitting')) {
+        this.cancelAnimation();
+      }
 
       const previousAction = changedProperties.get('action');
       if (previousAction) {
@@ -326,5 +321,10 @@ export class MouseCursor extends ReactiveElement {
 
       this.#img.src = inlineSVG(actionSprite(this.color, this.scale));
     }
+  }
+
+  cancelAnimation() {
+    this.#animation?.cancel();
+    this.#animation = null;
   }
 }
