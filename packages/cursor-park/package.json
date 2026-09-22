@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ChrisShank/cursor-benches.git"
+    "url": "git+https://github.com/ChrisShank/cursor-benches.git"
   },
   "bugs": {
     "url": "https://github.com/ChrisShank/cursor-benches/issues"
