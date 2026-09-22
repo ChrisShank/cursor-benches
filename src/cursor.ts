@@ -167,7 +167,6 @@ export const cursorLookingUp = (
 </filter>
 </defs>
 </svg>
-
 `;
 
 export const cursorLookingDown = (
@@ -196,7 +195,6 @@ export const cursorLookingDown = (
 </filter>
 </defs>
 </svg>
-
 `;
 
 export class MouseCursor extends ReactiveElement {

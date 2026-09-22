@@ -1,0 +1,35 @@
+{
+  "name": "cursor-park",
+  "author": "Christopher Shank <chris.shank.23@gmail.com>",
+  "version": "0.0.0",
+  "description": "Primitives to make personal websites feel more like public space.",
+  "keywords": [
+    "cursors",
+    "free library",
+    "bench"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./*": {
+      "import": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "dev": "vite demo",
+    "build:demo": "vite build demo",
+    "build": "tsc --build --pretty"
+  },
+  "dependencies": {
+    "lit": "^3.3.2"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.0",
+    "vite": "^8.0.12"
+  }
+}
