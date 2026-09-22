@@ -350,7 +350,7 @@ export class CursorSign extends CursorObject {
       border-radius: 4px;
       transition: opacity 200ms ease-out;
       box-sizing: border-box;
-      overflow: scroll;
+      overflow: auto;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
       pointer-events: none;
@@ -443,7 +443,7 @@ export class CursorInfographic extends CursorObject {
       border-radius: 4px;
       transition: opacity 200ms ease-out;
       box-sizing: border-box;
-      overflow: scroll;
+      overflow: auto;
       z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
@@ -538,7 +538,7 @@ export class CursorLibrary extends CursorObject {
       border-radius: 4px;
       transition: opacity 200ms ease-out;
       box-sizing: border-box;
-      overflow: scroll;
+      overflow: auto;
       z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
@@ -644,7 +644,7 @@ export class CursorMailbox extends CursorObject {
       border-radius: 4px;
       transition: opacity 200ms ease-out;
       box-sizing: border-box;
-      overflow: scroll;
+      overflow: auto;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
       display: flex;

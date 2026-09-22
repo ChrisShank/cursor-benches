@@ -24,7 +24,7 @@ export class MouseCursor extends ReactiveElement {
 
     return this.#self;
   }
-  static styles = css`
+  static override styles = css`
     :host {
       display: block;
       position: absolute;
@@ -65,7 +65,7 @@ export class MouseCursor extends ReactiveElement {
   #animation: Animation | null = null;
   #img = document.createElement('img');
 
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
+  protected override createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
     root.appendChild(this.#img);
@@ -73,7 +73,7 @@ export class MouseCursor extends ReactiveElement {
     return root;
   }
 
-  protected update(changedProperties: PropertyValues<this>): void {
+  protected override update(changedProperties: PropertyValues<this>): void {
     super.update(changedProperties);
 
     if (changedProperties.has('x')) {

@@ -61,9 +61,9 @@ export class CursorObject extends ReactiveElement {
 }
 
 export class CursorBench extends CursorObject {
-  static tagName = 'cursor-bench';
+  static override tagName = 'cursor-bench';
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: block;
       position: relative;
@@ -85,7 +85,7 @@ export class CursorBench extends CursorObject {
 
   #img = document.createElement('img');
 
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
+  protected override createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
     const url = new URL('./assets/bench.png', import.meta.url);
@@ -97,7 +97,7 @@ export class CursorBench extends CursorObject {
     return root;
   }
 
-  acquireCursor(x: number, y: number): void {
+  override acquireCursor(x: number, y: number): void {
     super.acquireCursor(x, y);
 
     // Shift the cursor over by 1/3 because the sprite is slightly bigger than it's outline.
@@ -109,7 +109,7 @@ export class CursorBench extends CursorObject {
     document.addEventListener('keyup', this.#onKeyup);
   }
 
-  releaseCursor(): void {
+  override releaseCursor(): void {
     document.removeEventListener('keydown', this.#onKeydown);
     document.removeEventListener('keyup', this.#onKeyup);
 
@@ -150,9 +150,9 @@ export class CursorBench extends CursorObject {
 }
 
 export class CursorLibrary extends CursorObject {
-  static tagName = 'cursor-library';
+  static override tagName = 'cursor-library';
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: block;
       position: relative;
@@ -197,7 +197,7 @@ export class CursorLibrary extends CursorObject {
       border-radius: 4px;
       transition: opacity 200ms ease-out;
       box-sizing: border-box;
-      overflow: scroll;
+      overflow: auto;
       z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
@@ -278,7 +278,7 @@ export class CursorLibrary extends CursorObject {
 
   @property({ type: String, reflect: true }) src = '';
 
-  protected createRenderRoot(): HTMLElement | DocumentFragment {
+  protected override createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
     this.#books.appendChild(this.#slot);
@@ -294,7 +294,7 @@ export class CursorLibrary extends CursorObject {
     return root;
   }
 
-  protected update(changedProperties: PropertyValues<this>): void {
+  protected override update(changedProperties: PropertyValues<this>): void {
     super.update(changedProperties);
 
     if (changedProperties.has('src')) {
@@ -344,7 +344,7 @@ export class CursorLibrary extends CursorObject {
     console.log(anchors);
   }
 
-  acquireCursor(x: number, y: number): void {
+  override acquireCursor(x: number, y: number): void {
     super.acquireCursor(x, y);
     this.cursor!.slot = 'cursor';
     this.cursor!.action = 'looking-down';
@@ -352,7 +352,7 @@ export class CursorLibrary extends CursorObject {
     this.#books.style.pointerEvents = 'all';
   }
 
-  releaseCursor(): void {
+  override releaseCursor(): void {
     this.cursor!.slot = '';
     this.#books.style.opacity = '0';
     this.#books.style.pointerEvents = '';

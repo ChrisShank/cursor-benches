@@ -8,6 +8,14 @@
     "free library",
     "bench"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChrisShank/cursor-benches.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ChrisShank/cursor-benches/issues"
+  },
+  "homepage": "https://github.com/ChrisShank/cursor-benches/tree/main/packages/cursor-park",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -23,7 +31,7 @@
   "scripts": {
     "dev": "vite demo",
     "build:demo": "vite build demo",
-    "build": "tsc --build --pretty"
+    "build": "tsc --build --pretty && cp ./src/assets/*.png ./dist/assets"
   },
   "dependencies": {
     "lit": "^3.3.2"

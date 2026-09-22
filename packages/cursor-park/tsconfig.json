@@ -1,25 +1,37 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
-    "module": "esnext",
-    "lib": ["ESNext", "DOM"],
-    "types": ["vite/client"],
+    /* Base Options: */
+    "esModuleInterop": true,
     "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "target": "ESNext",
+    "resolveJsonModule": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
 
-    /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    /* Strictness */
+    "strict": true,
+    "noImplicitOverride": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "useDefineForClassFields": false,
+
+    "experimentalDecorators": true,
+
+    /* If transpiling with TypeScript: */
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "checkJs": false,
+    "module": "ESNext",
+    "sourceMap": true,
+    "lib": ["esnext", "dom"],
+    "composite": true,
+    "declarationMap": true,
+
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true
   },
-  "include": ["src", "demo/main.ts"]
+  "include": ["src"]
 }
