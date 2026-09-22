@@ -1,6 +1,6 @@
 import { library } from './assets/svgs';
 import { MouseCursor } from './cursor';
-import { ReactiveElement, css } from './reactive-element';
+import { ReactiveElement, css, property, type PropertyValues } from './reactive-element';
 import { clamp, inlineSVG } from './utils';
 
 export class CursorObject extends ReactiveElement {
@@ -201,72 +201,147 @@ export class CursorLibrary extends CursorObject {
       z-index: 2;
       box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
       z-index: calc(Infinity);
-      padding: 12px 64px 4px 12px;
+      padding: 12px 64px 4px 20px;
 
       align-items: flex-end;
       display: flex !important;
       gap: 2px;
       list-style-type: none;
-    }
 
-    div ::slotted(a) {
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-      border-radius: 3px;
-      overflow: hidden;
-      color: white;
-      padding: 9px 4px;
-      line-height: 1.5;
-      text-decoration: none;
-      cursor: unset;
-      box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
-    }
+      ::slotted(a),
+      a {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        border-radius: 3px;
+        overflow: hidden;
+        color: white;
+        padding: 9px 4px;
+        line-height: 1.5;
+        text-decoration: none;
+        cursor: unset;
+        box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.5);
+      }
 
-    div ::slotted(a:hover) {
-      text-decoration: underline;
-    }
+      ::slotted(a:hover),
+      a:hover {
+        text-decoration: underline;
+      }
 
-    div ::slotted(a:nth-child(2n + 1)) {
-      rotate: 2deg;
-      translate: -2px;
-      margin-left: 2px;
-    }
+      ::slotted(a:nth-child(even)),
+      a:nth-child(even) {
+        background: #3ebc1b;
+      }
 
-    div ::slotted(a:nth-child(3n)) {
-      rotate: -1deg;
-      translate: 1px;
-      margin-left: 1px;
-    }
+      ::slotted(a:nth-child(odd)),
+      a:nth-child(odd) {
+        background: #ff0000;
+      }
 
-    div ::slotted(a:first-child) {
-      rotate: 8deg;
-      translate: -8px;
-      margin-left: 8px;
-    }
+      ::slotted(a:nth-child(2n + 1)),
+      a:nth-child(2n + 1) {
+        rotate: 2deg;
+        translate: -2px;
+        margin-left: 2px;
+        background: #286e75;
+      }
 
-    div ::slotted(a:last-of-type) {
-      rotate: -8deg;
-      translate: 8px;
+      ::slotted(a:nth-child(3n)),
+      a:nth-child(3n) {
+        rotate: -1deg;
+        translate: 1px;
+        margin-left: 1px;
+        background: #d3d382;
+        color: black;
+      }
+
+      ::slotted(a:first-child),
+      a:first-child {
+        rotate: 8deg;
+        translate: -8px;
+        margin-left: 8px;
+        background: #ff0000;
+      }
+
+      ::slotted(a:last-of-type),
+      a:last-of-type {
+        rotate: -8deg;
+        translate: 8px;
+        background: #d3d382;
+      }
     }
   `;
 
   #img = document.createElement('img');
   #books = document.createElement('div');
+  #slot = document.createElement('slot');
   #clickZone = document.createElement('click-zone');
+
+  @property({ type: String, reflect: true }) src = '';
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     const root = super.createRenderRoot();
 
-    const slot = document.createElement('slot');
-
-    this.#books.appendChild(slot);
+    this.#books.appendChild(this.#slot);
     this.#books.addEventListener('click', (e) => e.stopPropagation());
 
     this.#img.src = inlineSVG(library());
+
     const cursorSlot = document.createElement('slot');
     cursorSlot.name = 'cursor';
+
     root.append(cursorSlot, this.#clickZone, this.#img, this.#books);
 
     return root;
+  }
+
+  protected update(changedProperties: PropertyValues<this>): void {
+    super.update(changedProperties);
+
+    if (changedProperties.has('src')) {
+      if (this.src === '') return;
+
+      const url = URL.parse(this.src);
+
+      if (url?.hostname === 'semble.so') {
+        const [, profile, identifier, collections, rkey] = url.pathname.split('/');
+        console.log('url', profile, identifier, collections, rkey);
+
+        if (profile === 'profile' && identifier && collections === 'collections' && rkey) {
+          this.#loadSembleCollection(identifier, rkey);
+        }
+      }
+    }
+  }
+
+  async #loadSembleCollection(identifier: string, rkey: string) {
+    const response = await fetch(
+      `https://api.semble.so/xrpc/network.cosmik.collection.getByAtUri?handle=${identifier}&recordKey=${rkey}&page=1&limit=15`,
+    );
+
+    if (!response.ok) return;
+
+    const collection = await response.json();
+
+    const links = collection.urlCards.map(({ cardContent }: any) => ({
+      url: cardContent.url,
+      title: cardContent.title || cardContent.description,
+    }));
+
+    this.#createLinks(links);
+  }
+
+  #createLinks(links: { url: string; title: string }[]) {
+    const anchors = links.map((link) => {
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.textContent = link.title.length < 60 ? link.title : link.title.slice(0, 57) + '...';
+      a.target = '_blank';
+      const size = -2.5 * link.title.length + 70;
+      a.style.fontSize = `${clamp(12, size, 18)}px`;
+      return a;
+    });
+    this.#slot.append(...anchors);
+    console.log(anchors);
   }
 
   acquireCursor(x: number, y: number): void {
