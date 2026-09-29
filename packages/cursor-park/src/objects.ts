@@ -61,8 +61,6 @@ export class CursorObject extends ReactiveElement {
 }
 
 export class CursorBench extends CursorObject {
-  static override tagName = 'cursor-bench';
-
   static override styles = css`
     :host {
       display: block;
@@ -150,8 +148,6 @@ export class CursorBench extends CursorObject {
 }
 
 export class CursorLibrary extends CursorObject {
-  static override tagName = 'cursor-library';
-
   static override styles = css`
     :host {
       display: block;

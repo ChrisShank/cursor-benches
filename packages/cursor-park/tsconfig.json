@@ -3,7 +3,7 @@
     /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "ESNext",
+    "target": "esnext",
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
@@ -22,7 +22,7 @@
     "moduleResolution": "bundler",
     "allowJs": true,
     "checkJs": false,
-    "module": "ESNext",
+    "module": "esnext",
     "sourceMap": true,
     "lib": ["esnext", "dom"],
     "composite": true,

@@ -16,7 +16,7 @@ export class MouseCursor extends ReactiveElement {
 
   static get self() {
     if (this.#self === undefined) {
-      this.#self = new MouseCursor();
+      this.#self = document.createElement('mouse-cursor');
       this.#self.scale = CURSOR_SCALE;
       this.#self.color = CURSOR_COLOR;
       this.#self.#internals.states.add('self');
@@ -24,6 +24,7 @@ export class MouseCursor extends ReactiveElement {
 
     return this.#self;
   }
+
   static override styles = css`
     :host {
       display: block;

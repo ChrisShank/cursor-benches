@@ -1,7 +1,7 @@
 {
   "name": "cursor-park",
   "author": "Christopher Shank <chris.shank.23@gmail.com>",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Primitives to make personal websites feel more like public space.",
   "keywords": [
     "cursors",
@@ -31,7 +31,8 @@
   "scripts": {
     "dev": "vite demo",
     "build:demo": "vite build demo",
-    "build": "tsc --build --pretty && cp ./src/assets/*.png ./dist/assets"
+    "build": "tsc --build --pretty && cp ./src/assets/*.png ./dist/assets",
+    "pub": "npm run build && npm publish"
   },
   "dependencies": {
     "lit": "^3.3.2"

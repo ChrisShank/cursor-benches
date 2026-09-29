@@ -1,7 +1,7 @@
 import { unsafeCSS } from '@lit/reactive-element';
-import { MouseCursor } from '../src/cursor';
+import { MouseCursor } from './cursor';
 import { CursorBench, CursorObject, CursorLibrary } from './objects';
-import { convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE } from '../src/utils';
+import { convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE } from './utils';
 import { pointingCursor } from './assets/svgs';
 
 /** Global Styles */
