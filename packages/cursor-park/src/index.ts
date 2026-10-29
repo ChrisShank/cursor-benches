@@ -1,6 +1,5 @@
 import { unsafeCSS } from '@lit/reactive-element';
 import { MouseCursor } from './cursor';
-import { CursorBench, CursorObject, CursorLibrary } from './objects';
 import { convertSVGIntoCssURL, CURSOR_COLOR, CURSOR_SCALE } from './utils';
 import { pointingCursor } from './assets/svgs';
 
@@ -19,4 +18,5 @@ document.adoptedStyleSheets.push(styles);
 
 MouseCursor.define();
 
-export { CursorBench, MouseCursor, CursorObject, CursorLibrary };
+export { MouseCursor };
+export { CursorBench, CursorObject, CursorLibrary, CursorGallery } from './objects';

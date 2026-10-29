@@ -1,7 +1,8 @@
-import { library } from './assets/svgs';
+import { AtUri } from '@atproto/syntax';
+import { gallery, library } from './assets/svgs';
 import { MouseCursor } from './cursor';
 import { ReactiveElement, css, property, type PropertyValues } from './reactive-element';
-import { clamp, inlineSVG } from './utils';
+import { clamp, fetchBacklinks, fetchRecord, inlineSVG } from './utils';
 
 export class CursorObject extends ReactiveElement {
   static acquiredObject: CursorObject | null = null;
@@ -300,7 +301,6 @@ export class CursorLibrary extends CursorObject {
 
       if (url?.hostname === 'semble.so') {
         const [, profile, identifier, collections, rkey] = url.pathname.split('/');
-        console.log('url', profile, identifier, collections, rkey);
 
         if (profile === 'profile' && identifier && collections === 'collections' && rkey) {
           this.#loadSembleCollection(identifier, rkey);
@@ -337,7 +337,6 @@ export class CursorLibrary extends CursorObject {
       return a;
     });
     this.#slot.append(...anchors);
-    console.log(anchors);
   }
 
   override acquireCursor(x: number, y: number): void {
@@ -357,9 +356,191 @@ export class CursorLibrary extends CursorObject {
   }
 }
 
+export class CursorGallery extends CursorObject {
+  static override styles = css`
+    :host {
+      display: block;
+      position: relative;
+      /* 21.7 x 41.7 */
+      aspect-ratio: 0.53;
+      height: 80px;
+      user-select: none;
+    }
+
+    click-zone {
+      display: block;
+      position: absolute;
+      height: 100%;
+      width: 150%;
+      top: -25%;
+      right: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    #background {
+      height: 100%;
+      width: 100%;
+    }
+
+    ::slotted(mouse-cursor) {
+      translate: -50% 0%;
+    }
+
+    div {
+      font-size: 16px;
+      pointer-events: none;
+      text-align: center;
+      opacity: 0;
+      position: absolute;
+      top: -75px;
+      bottom: -75px;
+      left: 125%;
+      background: #deeade;
+      border-radius: 4px;
+      transition: opacity 200ms ease-out;
+      box-sizing: border-box;
+      overflow: auto;
+      z-index: 2;
+      box-shadow: 3px 4px 8px 0px rgba(0, 0, 0, 0.5);
+      z-index: calc(Infinity);
+      padding: 12px 64px 4px 20px;
+
+      align-items: flex-end;
+      display: flex !important;
+      gap: 2px;
+      list-style-type: none;
+    }
+
+    #preview:not([src]) {
+      display: none;
+    }
+
+    #preview {
+      position: absolute;
+      bottom: 65%;
+      left: 50%;
+      translate: -50%;
+      width: 45%;
+    }
+  `;
+
+  #backgroundImage = document.createElement('img');
+  #artworkPreview = document.createElement('img');
+  #clickZone = document.createElement('click-zone');
+
+  @property({ type: String, reflect: true }) src = '';
+
+  protected override createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+
+    this.#backgroundImage.id = 'background';
+    this.#backgroundImage.src = inlineSVG(gallery());
+
+    this.#artworkPreview.id = 'preview';
+
+    const cursorSlot = document.createElement('slot');
+    cursorSlot.name = 'cursor';
+
+    root.append(cursorSlot, this.#clickZone, this.#backgroundImage, this.#artworkPreview);
+
+    return root;
+  }
+
+  protected override async update(changedProperties: PropertyValues<this>) {
+    super.update(changedProperties);
+
+    if (changedProperties.has('src')) {
+      if (this.src === '') {
+        return;
+      }
+      const [exhibit, vouches] = await Promise.all([
+        fetchRecord(this.src),
+        fetchBacklinks(this.src, 'place.cursors.gallery.vouch:exhibit.uri'),
+      ]);
+
+      if (exhibit === null) {
+        console.log('AT URI for exhibit is not valid.');
+        return;
+      }
+
+      if (location.hostname !== 'localhost' && location.origin !== exhibit.value.url) {
+        console.log('exhibit origin does not match', exhibit.value.url);
+        return;
+      }
+
+      const exhibitUri = new AtUri(this.src);
+
+      const exhibitVouch = vouches.find((vouch) => {
+        const vouchUri = new AtUri(vouch.uri);
+
+        return exhibitUri.did === vouchUri.did && vouch.value.exhibit.uri === this.src;
+      });
+
+      console.log(exhibit, vouches, exhibitVouch);
+
+      if (exhibitVouch === undefined) {
+        console.log('no vouch found for this exhibit');
+        return;
+      }
+
+      const artworkUri = new AtUri(exhibitVouch.value.artwork.uri);
+
+      if (exhibitUri.did !== artworkUri.did) {
+        const artworkVouch = vouches.find((vouch) => {
+          const vouchUri = new AtUri(vouch.uri);
+
+          return (
+            artworkUri.did === vouchUri.did &&
+            vouch.value.artwork.uri === exhibitVouch.value.artwork.uri &&
+            vouch.value.exhibit.uri === exhibitVouch.value.exhibit.uri
+          );
+        });
+
+        if (artworkVouch === undefined) {
+          console.log('could not bidirectionally verify vouch');
+          return;
+        }
+      } else {
+        console.log('no need to bidirectionally vouch since the artwork is created by the exhibit host');
+      }
+
+      const artwork = await fetchRecord(artworkUri.toString());
+
+      if (artwork === null) {
+        console.log('could not find AT record for artwork');
+        return;
+      }
+
+      const imageUrl = `https://cdn.bsky.app/img/feed_fullsize/plain/${artworkUri.did}/${artwork.value.preview.ref.$link}@png`;
+      console.log(imageUrl);
+      this.#artworkPreview.src = imageUrl;
+    }
+  }
+
+  override acquireCursor(x: number, y: number): void {
+    super.acquireCursor(x, y);
+    this.cursor!.slot = 'cursor';
+    this.cursor!.action = 'looking-up';
+    // this.#artworkPreview.style.opacity = '0.9';
+    // this.#artworkPreview.style.pointerEvents = 'all';
+  }
+
+  override releaseCursor(): void {
+    this.cursor!.slot = '';
+    // this.#artworkPreview.style.opacity = '0';
+    // this.#artworkPreview.style.pointerEvents = '';
+
+    super.releaseCursor();
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'cursor-bench': CursorBench;
     'cursor-library': CursorLibrary;
+    'cursor-gallery': CursorGallery;
   }
 }
