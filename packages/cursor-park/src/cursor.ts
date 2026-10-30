@@ -12,6 +12,8 @@ import { ReactiveElement, css, property, type PropertyValues } from './reactive-
 import { CURSOR_COLOR, CURSOR_SCALE, inlineSVG } from './utils';
 
 export class MouseCursor extends ReactiveElement {
+  static override tagName = 'mouse-cursor';
+
   static #self: MouseCursor | undefined;
 
   static get self() {
